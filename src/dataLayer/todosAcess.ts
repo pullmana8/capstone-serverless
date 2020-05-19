@@ -4,7 +4,7 @@ import { Logger } from '@sailplane/logger';
 import { TodoItem } from '../models/TodoItem';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-const XAWS = AWSXRay.captureAWS(AWS)
+const XAWS = AWSXRay.captureAWS(AWS);
 const logger = new Logger('todos-access');
 
 export class TodoAccess {
@@ -12,7 +12,7 @@ export class TodoAccess {
     private readonly docClient: DocumentClient = createDynamoDBClient(),
     private readonly todosTable = process.env.TODOS_TABLE,
     private readonly userIdIndex = process.env.USER_ID_INDEX
-  ) { }
+  ) {}
 
   async listAllTodos(userId: string): Promise<TodoItem[]> {
     logger.debug(`List todo items for user ${userId}`);
@@ -38,12 +38,12 @@ export class TodoAccess {
 
 function createDynamoDBClient() {
   if (process.env.IS_OFFLINE) {
-    logger.info('Creating a local DynamoDB instance')
+    logger.info('Creating a local DynamoDB instance');
     return new XAWS.DynamoDB.DocumentClient({
       region: 'localhost',
-      endpoint: 'http://localhost:8000'
-    })
+      endpoint: 'http://localhost:8000',
+    });
   }
 
-  return new XAWS.DynamoDB.DocumentClient()
+  return new XAWS.DynamoDB.DocumentClient();
 }

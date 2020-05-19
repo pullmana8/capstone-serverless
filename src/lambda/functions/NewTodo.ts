@@ -1,24 +1,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import * as uuid from 'uuid'
-import * as LambdaUtils from '@sailplane/lambda-utils'
-import { Logger } from '@sailplane/logger'
+import * as uuid from 'uuid';
+import * as LambdaUtils from '@sailplane/lambda-utils';
+import { Logger } from '@sailplane/logger';
 
-const AWSXRay = require('aws-xray-sdk')
-const AWS = AWSXRay.captureAWS(require('aws-sdk'))
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
-const logger = new Logger('create')
+const AWSXRay = require('aws-xray-sdk');
+const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+const docClient = new AWS.DynamoDB.DocumentClient();
+const todosTable = process.env.TODOS_TABLE;
+const logger = new Logger('create');
 
-/* interface TodoItem {
-  userId: string;
-  todoId: string;
-  createdAt: string;
-  name: string;
-  dueDate: string;
-  done: boolean;
-  attachmentUrl?: string
-}
-
+/*
 interface CreateTodoRequest {
   name: string;
   dueDate: string;
@@ -45,30 +36,38 @@ interface CreateTodoRequest {
   return newItem
 } */
 
-export const handler = LambdaUtils.wrapApiHandler(async (event: LambdaUtils.APIGatewayProxyEvent) => {
-  logger.info(event.body)
+export const handler = LambdaUtils.wrapApiHandler(
+  async (event: LambdaUtils.APIGatewayProxyEvent) => {
+    logger.info(event.body);
 
-  const newTodo = event.body
-  logger.info('Creating todo item for user', newTodo)
+    const newTodo = event.body;
+    logger.info('Creating todo item for user', newTodo);
 
-  const itemId = uuid.v4()
+    const itemId = uuid.v4();
 
-  const items = {
-    todoId: itemId,
-    ...newTodo
+    const items = {
+      todoId: itemId,
+      ...newTodo,
+    };
+
+    await docClient
+      .put({
+        TableName: todosTable,
+        Item: items,
+      })
+      .promise();
+
+    logger.info('Create and list items: ', items);
+    return {
+      statusCode: 201,
+      body: JSON.stringify(
+        {
+          message: `Item successfully created ${items}`,
+          items,
+        },
+        null,
+        2
+      ),
+    };
   }
-
-  await docClient.put({
-    TableName: todosTable,
-    Item: items
-  }).promise()
-
-  logger.info('Create and list items: ', items)
-  return {
-    statusCode: 201,
-    body: JSON.stringify({
-      message: `Item successfully created ${items}`,
-      items
-    }, null, 2)
-  }
-})
+);

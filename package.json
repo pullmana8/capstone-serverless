@@ -11,9 +11,9 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
-    "build": "run-s clean && npm run build:types && npm run build:*",
+    "build": "run-s clean && npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "build:js": "babel src --out-dir build --extensions \".ts,.tsx\" --source-maps inline",
     "describe": "npm-scripts-info",
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
@@ -29,8 +29,8 @@
     "cov:send": "nyc report --reporter=lcov && codecov",
     "cov:check": "nyc report && nyc check-coverage --lines 100 --functions 100 --branches 100",
     "doc": "run-s doc:html && open-cli build/docs/index.html",
-    "doc:html": "typedoc src/ --exclude **/*.spec.ts --target ES6 --mode file --out build/docs",
-    "doc:json": "typedoc src/ --exclude **/*.spec.ts --target ES6 --mode file --json build/docs/typedoc.json",
+    "doc:html": "typedoc src/ --exclude **/*.spec.ts --target ESNext --mode file --out build/docs",
+    "doc:json": "typedoc src/ --exclude **/*.spec.ts --target ESNext --mode file --json build/docs/typedoc.json",
     "doc:publish": "gh-pages -m \"[ci skip] Updates\" -d build/docs",
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && npm i",
@@ -83,9 +83,6 @@
     "prettier": "^2.0.5",
     "standard-version": "^8.0.0",
     "trash-cli": "^3.0.0",
-    "tslint": "^6.1.2",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-immutable": "^6.0.1",
     "typescript": "^3.9.2"
   },
   "ava": {

@@ -9,12 +9,6 @@ const docClient = new AWS.DynamoDB.DocumentClient();
 const todosTable = process.env.TODOS_TABLE;
 const logger = new Logger('create');
 
-/*
-interface CreateTodoRequest {
-  name: string;
-  dueDate: string;
-} */
-
 /* async function createTodoItem(request: CreateTodoRequest, userId: string): Promise<TodoItem> {
   const itemId = uuid.v4()
 

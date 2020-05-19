@@ -13,5 +13,6 @@ yarn.lock
 .serverless
 .webpack
 .dynamodb
+.vscode
 build
 dist

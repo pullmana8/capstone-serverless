@@ -25,6 +25,19 @@ custom:
     packagerOptions:
       scripts:
         - rm -rf node_modules/aws-sdk
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Todo API
+        description: Serverless todo app
+    models:
+      - name: CreateTodoRequest
+        contentType: application/json
+        schema: ${file(validators/create-todo-request.json)}
+      - name: UpdateTodoRequest
+        contentType: application/json
+        schema: ${file(validators/update-todo-request.json)}
 
 provider:
   name: aws
@@ -43,22 +56,149 @@ provider:
     SERVERLESS_STAGE: ${self:provider.stage}
     TODOS_TABLE: TODOS-Serverless-${self:provider.stage}
     USER_ID_INDEX: UserIdIndex
+    ATTACHMENTS_BUCKET: attachments-urls-${self:provider.stage}-${self:provider.region}
 
   tracing:
     lambda: true
     apiGateway: true
 
 functions:
-  LambdaHandler:
+  GetTodos:
     tracing: Active
-    handler: handler.handler
+    handler: src/lambda/functions/GetTodos.handler
     layers:
       - arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:8
-
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: "*"
+    events:
+      - http:
+          method: get
+          path: /todos
+          cors: true
+          allowCredentials: true
+  CreateTodo:
+    tracing: Active
+    handler: src/lambda/functions/NewTodo.handler
+    layers:
+      - arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:8
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: "*"
+    events:
+      - http:
+          method: post
+          path: /todos
+          cors: true
+          allowCredentials: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new todo item
+            description: Create and insert item into todo table
+            requestModels:
+              'application/json': CreateTodoRequest
+  UpdateTodo:
+    tracing: Active
+    handler: src/lambda/functions/UpdateTodo.handler
+    layers:
+      - arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:8
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: "*"
+    events:
+      - http:
+          method: patch
+          path: todos/{todoId}
+          cors: true
+          allowCredentials: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update a new todo item
+            description: Update and insert item into todo table
+            requestModels:
+              'application/json': UpdateTodoRequest
+  DeleteTodo:
+    tracing: Active
+    handler: src/lambda/functions/DeleteTodo.handler
+    events:
+      - http:
+          method: delete
+          path: todos/{todoId}
+          cors: true
+          allowCredentials: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:DeleteItem
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: '*'
 resources:
-  - ${file(./src/dynamodb/dynamodb.yml)}
+  - ${file(./services/apigateway/gateway.yml)}
+  - ${file(./services/uploads/s3bucket.yml)}
+  - ${file(./services/dynamodb/dynamodb.yml)}
+
 
 plugins:
   - serverless-webpack
   - serverless-prune-plugin
+  - serverless-reqvalidator-plugin
+  - serverless-iam-roles-per-function
   - serverless-offline

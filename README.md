@@ -2,11 +2,19 @@
 
 ## Requirements
 
+Updating the typescript starter generator.
+
 `npx typescript starter`
+
+Use the npm update package.
 
 `ncu -u`
 
+Install the dependencies.
+
 `npm install`
+
+Install Babel and Typescript if it is not in the package.json for some reason.
 
 `npm install --save-dev typescript @babel/core @babel/cli @babel/plugin-proposal-class-properties @babel/preset-env @babel/preset-typescript`
 
@@ -19,7 +27,11 @@
     "typescript": "^3.9.2"
 ```
 
-`tsc --init --declaration --allowSyntheticDefaultImports --target esnext --outDir build/main`
+Config the project with tsc
+
+`tsc --init --declaration --allowSyntheticDefaultImports --target esnext --outDir build`
+
+Configure babelrc
 
 `.babelrc`
 
@@ -34,6 +46,8 @@
     ]
 }
 ```
+
+Set up the scripts, you may need to change to suit your needs.
 
 ```bash
 "scripts": {
@@ -51,6 +65,8 @@ TSLint has deprecated, make conversion to ESLint
 
 `npm install @typescript-eslint/eslint-plugin @typescript-eslint/eslint-plugin-tslint @typescript-eslint/parser eslint eslint-config-prettier eslint-plugin-import eslint-plugin-jsdoc eslint-plugin-prefer-arrow --save-dev`
 
-Webpack
+Webpack configuration
 
 `npm install --save-dev webpack webpack-cli babel-loader`
+
+`sls invoke -f CreateTodo --contextPath fixtures/create.json`

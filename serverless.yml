@@ -1,0 +1,64 @@
+service:
+  name: todo-serverless
+
+package:
+  excludeDevDependencies: true
+  individually: true
+
+custom:
+  defaultStage: dev
+  profiles:
+    dev: default
+    prod: prod
+
+  serverless-layers:
+    layersDeploymentBucket: serverless-${self:provider.stage}-${self:provider.region}
+    common:
+      dependenciesPath: ./package.json
+
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    packager: npm
+    packagerOptions:
+      scripts:
+        - rm -rf node_modules/aws-sdk
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-2
+  stage: ${opt.stage, 'dev'}
+  profile: ${self:custom.profiles.${self:provider.stage}}
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  deploymentBucket:
+    serverSideEncryption: AES256
+  environment:
+    DEBUG: "*"
+    NODE_ENV: ${self:provider.stage}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    SERVERLESS_STAGE: ${self:provider.stage}
+    TODOS_TABLE: TODOS-Serverless-${self:provider.stage}
+    USER_ID_INDEX: UserIdIndex
+
+  tracing:
+    lambda: true
+    apiGateway: true
+
+functions:
+  LambdaHandler:
+    tracing: Active
+    handler: handler.handler
+    layers:
+      - arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:8
+
+resources:
+  - ${file(./src/dynamodb/dynamodb.yml)}
+
+plugins:
+  - serverless-webpack
+  - serverless-prune-plugin
+  - serverless-offline

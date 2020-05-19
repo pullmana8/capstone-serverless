@@ -9,3 +9,9 @@ coverage
 *.log
 
 yarn.lock
+
+.serverless
+.webpack
+.dynamodb
+build
+dist

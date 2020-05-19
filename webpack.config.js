@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require("path");
 const slsw = require("serverless-webpack");
-// @ts-ignore
+const TerserPlugin = require('terser-webpack-plugin');
 const nodeExternals = require("webpack-node-externals");
-// @ts-ignore
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 const entries = {};
@@ -12,7 +12,7 @@ Object.keys(slsw.lib.entries).forEach(
   key => (entries[key] = ["./source-map-install.js", slsw.lib.entries[key]])
 );
 
-let babelLoader = {
+const babelLoader = {
   loader: "babel-loader",
   options: {
     plugins: [
@@ -54,7 +54,8 @@ module.exports = {
   },
   target: "node",
   optimization: {
-    minimize: false
+    minimize: true,
+    minimizer: [new TerserPlugin()]
   },
   externals: [nodeExternals()],
   plugins: [new ForkTsCheckerWebpackPlugin()],

@@ -35,7 +35,8 @@
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && npm i",
     "clean": "trash build test",
-    "prepare-release": "run-s reset test cov:check doc:html version doc:publish"
+    "prepare-release": "run-s reset test cov:check doc:html version doc:publish",
+    "webpack": "webpack"
   },
   "scripts-info": {
     "info": "Display information about the package scripts",
@@ -61,12 +62,16 @@
     "@middy/http-json-body-parser": "^1.0.0",
     "@sailplane/lambda-utils": "^3.0.0",
     "@sailplane/logger": "^2.0.1",
+    "@types/aws-lambda": "^8.10.51",
     "aws-lambda": "^1.0.6",
     "aws-sdk": "^2.679.0",
     "aws-xray-sdk": "^3.0.1",
     "axios": "^0.19.2",
     "http-errors": "^1.7.3",
     "jsonwebtoken": "^8.5.1",
+    "serverless-offline": "^6.1.5",
+    "serverless-prune-plugin": "^1.4.3",
+    "serverless-webpack": "^5.3.2",
     "sha.js": "^2.4.11",
     "uuid": "^8.0.0"
   },
@@ -99,6 +104,7 @@
     "open-cli": "^6.0.1",
     "prettier": "^2.0.5",
     "standard-version": "^8.0.0",
+    "terser-webpack-plugin": "^3.0.1",
     "trash-cli": "^3.0.0",
     "ts-loader": "^7.0.4",
     "typescript": "^3.9.2",

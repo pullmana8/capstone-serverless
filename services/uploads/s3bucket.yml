@@ -1,0 +1,31 @@
+Resources:
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:provider.environment.ATTACHMENTS_BUCKET}
+      CorsConfiguration:
+        CorsRules:
+          -
+            AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+              - DELETE
+            MaxAge: 3000
+    # Create the bucket policy attached to the main bucket
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AttachmentsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Principal: '*'
+          Action: 's3:GetObject'
+          Effect: Allow
+          Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*

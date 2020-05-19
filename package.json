@@ -54,11 +54,19 @@
     "node": ">=8.9"
   },
   "dependencies": {
+    "@middy/core": "^1.0.0",
+    "@middy/http-cors": "^1.0.0",
+    "@middy/http-event-normalizer": "^1.0.0",
+    "@middy/http-header-normalizer": "^1.0.0",
+    "@middy/http-json-body-parser": "^1.0.0",
+    "@sailplane/lambda-utils": "^3.0.0",
+    "@sailplane/logger": "^2.0.1",
     "sha.js": "^2.4.11"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
+    "@babel/plugin-proposal-async-generator-functions": "^7.8.3",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-env": "^7.9.6",
     "@babel/preset-typescript": "^7.9.0",
@@ -69,6 +77,7 @@
     "@typescript-eslint/eslint-plugin-tslint": "^2.34.0",
     "@typescript-eslint/parser": "^2.34.0",
     "ava": "3.8.2",
+    "babel-loader": "^8.1.0",
     "codecov": "^3.7.0",
     "cz-conventional-changelog": "^3.2.0",
     "eslint": "^7.0.0",
@@ -76,6 +85,7 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsdoc": "^25.4.2",
     "eslint-plugin-prefer-arrow": "^1.2.1",
+    "fork-ts-checker-webpack-plugin": "^4.1.4",
     "gh-pages": "^2.2.0",
     "npm-run-all": "^4.1.5",
     "nyc": "^15.0.1",
@@ -83,7 +93,10 @@
     "prettier": "^2.0.5",
     "standard-version": "^8.0.0",
     "trash-cli": "^3.0.0",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.2",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-node-externals": "^1.7.2"
   },
   "ava": {
     "failFast": true,

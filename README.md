@@ -50,3 +50,7 @@ TSLint has deprecated, make conversion to ESLint
 `npx tslint-to-eslint-config`
 
 `npm install @typescript-eslint/eslint-plugin @typescript-eslint/eslint-plugin-tslint @typescript-eslint/parser eslint eslint-config-prettier eslint-plugin-import eslint-plugin-jsdoc eslint-plugin-prefer-arrow --save-dev`
+
+Webpack
+
+`npm install --save-dev webpack webpack-cli babel-loader`

@@ -11,17 +11,17 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
-    "build": "run-s clean && npm run build:types && npm run build:js",
+    "build": "run-s clean && npm run build:types && npm run build:*",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "babel src --out-dir build --extensions \".ts,.tsx\" --source-maps inline",
+    "build:*": "babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
     "describe": "npm-scripts-info",
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
-    "fix:tslint": "tslint --fix --project .",
+    "fix:tslint": "eslint --ext .ts,.tsx src/",
     "test": "run-s build test:*",
-    "test:lint": "tslint --project . && prettier \"src/**/*.ts\" --list-different",
+    "test:lint": "eslint build/src/lib/* && prettier \"src/**/*.ts\" --list-different",
     "test:unit": "nyc --silent ava",
     "watch": "run-s clean build:main && run-p \"build:main -- -w\" \"test:unit -- --watch\"",
     "cov": "run-s build test:unit cov:html && open-cli coverage/index.html",
@@ -61,7 +61,14 @@
     "@middy/http-json-body-parser": "^1.0.0",
     "@sailplane/lambda-utils": "^3.0.0",
     "@sailplane/logger": "^2.0.1",
-    "sha.js": "^2.4.11"
+    "aws-lambda": "^1.0.6",
+    "aws-sdk": "^2.679.0",
+    "aws-xray-sdk": "^3.0.1",
+    "axios": "^0.19.2",
+    "http-errors": "^1.7.3",
+    "jsonwebtoken": "^8.5.1",
+    "sha.js": "^2.4.11",
+    "uuid": "^8.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
@@ -102,10 +109,10 @@
   "ava": {
     "failFast": true,
     "files": [
-      "build/main/**/*.spec.js"
+      "dist/lib/**/*.spec.js"
     ],
-    "sources": [
-      "build/main/**/*.js"
+    "ignoredByWatcher": [
+      "dist/lib/**/*.js"
     ]
   },
   "config": {

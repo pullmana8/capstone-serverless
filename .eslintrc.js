@@ -26,8 +26,7 @@ module.exports = {
         "sourceType": "module"
     },
     "plugins": [
-        "@typescript-eslint",
-        "@typescript-eslint/tslint"
+        "@typescript-eslint"
     ],
     "rules": {
         "@typescript-eslint/adjacent-overload-signatures": "error",
@@ -85,7 +84,7 @@ module.exports = {
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-misused-new": "error",
         "@typescript-eslint/no-namespace": "error",
-        "@typescript-eslint/no-param-reassign": "error",
+        "@typescript-eslint/no-param-reassign": "off", /* Turned off */
         "@typescript-eslint/no-parameter-properties": "off",
         "@typescript-eslint/no-this-alias": "error",
         "@typescript-eslint/no-unused-expressions": "error",
@@ -141,15 +140,15 @@ module.exports = {
         ],
         "id-match": "error",
         "import/no-extraneous-dependencies": [
-            "error",
-            {
+            "off",
+/*            {
                 "devDependencies": false
-            }
+            } */
         ],
-        "import/no-internal-modules": "error",
-        "jsdoc/check-alignment": "error",
-        "jsdoc/check-indentation": "error",
-        "jsdoc/newline-after-description": "error",
+        "import/no-internal-modules": "off", /* Turn off */
+        "jsdoc/check-alignment": "off", /* Turn off */
+        "jsdoc/check-indentation": "off", /* Turn off */
+        "jsdoc/newline-after-description": "off", /* Turn off */
         "linebreak-style": "off",
         "max-classes-per-file": [
             "error",
@@ -198,7 +197,7 @@ module.exports = {
             "error",
             "never"
         ],
-        "prefer-arrow/prefer-arrow-functions": "error",
+        "prefer-arrow/prefer-arrow-functions": "off", /* Turn off */
         "prefer-const": "error",
         "prefer-object-spread": "error",
         "quote-props": "off",
@@ -218,37 +217,6 @@ module.exports = {
             }
         ],
         "use-isnan": "error",
-        "valid-typeof": "off",
-        "@typescript-eslint/tslint/config": [
-            "error",
-            {
-                "rules": {
-                    "no-class-assign": true,
-                    "no-delete": true,
-                    "no-expression-statement": [
-                        true,
-                        {
-                            "ignore-prefix": [
-                                "console.",
-                                "process.exit"
-                            ]
-                        }
-                    ],
-                    "no-if-statement": true,
-                    "prefer-const": true,
-                    "no-method-signature": true,
-                    "no-mixed-interface": true,
-                    "no-object-mutation": true,
-                    "no-this": true,
-                    "prefer-conditional-expression": true,
-                    "readonly-array": true,
-                    "readonly-keyword": true,
-                    "typedef": [
-                        true,
-                        "call-signature"
-                    ]
-                }
-            }
-        ]
+        "valid-typeof": "off"
     }
 };

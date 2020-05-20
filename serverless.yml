@@ -3,9 +3,22 @@ service:
 
 package:
   excludeDevDependencies: true
-  individually: true
+  include:
+    - "package.json"
+    - "!**/node_modules/aws-sdk/**"
 
 custom:
+  jetpack:
+    preInclude:
+      - "!**"
+    trace:
+      ignores:
+        - "aws-sdk"
+    dynamic:
+      bail: true
+
+  topicName: imagesTopic-${self:provider.stage}
+
   documentation:
     api:
       info:
@@ -29,18 +42,11 @@ custom:
     automatic: true
     number: 3
 
-  webpack:
-    webpackConfig: ./webpack.config.js
-    includeModules:
-      forceExclude:
-        - aws-sdk
-    packager: npm
-    packagerOptions:
-      scripts:
-        - rm -rf node_modules/aws-sdk
-
 provider:
   name: aws
+  logs:
+    websocket:
+      level: ERROR
   runtime: nodejs12.x
   region: us-east-2
   stage: ${opt.stage, 'dev'}
@@ -59,13 +65,16 @@ provider:
     USER_ID_INDEX: UserIdIndex
     ATTACHMENTS_BUCKET: attachments-urls-${self:provider.stage}-${self:provider.region}
     CONNECTIONS_TABLE: Connections-${self:provider.stage}-${self:provider.region}
-
+    SIGNED_URL_EXPIRATION: 300
   tracing:
     lambda: true
     apiGateway: true
 
 functions:
   GetTodos:
+    package:
+      include:
+        - "package.json"
     tracing: Active
     handler: src/lambda/functions/GetTodos.handler
     iamRoleStatements:
@@ -186,30 +195,58 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: '*'
+
   ConnectHandler:
+    tracing: Active
     handler: "src/lambda/websocket/Connect.handler"
     events:
       -
         websocket:
           route: "$connect"
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+          - dynamodb:PutItem
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
+
   DisconnectHandler:
+    tracing: Active
     handler: "src/lambda/websocket/Disconnect.handler"
     events:
       -
         websocket:
           route: "$disconnect"
-
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+          - dynamodb:PutItem
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
 resources:
   - ${file(./services/apigateway/gateway.yml)}
   - ${file(./services/uploads/s3bucket.yml)}
   - ${file(./services/dynamodb/dynamodb.yml)}
-  - ${file(./services/dynamodb/connections.yml)}
+#  - ${file(./services/dynamodb/connections.yml)}
+#  - ${file(./services/sns/snsTopics.yml)}
 
 plugins:
-  - serverless-webpack
+  - serverless-jetpack
+  - serverless-plugin-typescript
   - serverless-prune-plugin
   - serverless-reqvalidator-plugin
   - serverless-aws-documentation
   - serverless-iam-roles-per-function
-  - serverless-plugin-thundra
   - serverless-offline

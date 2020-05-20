@@ -13,41 +13,14 @@ Object.keys(slsw.lib.entries).forEach(
   key => (entries[key] = ["./source-map-install.js", slsw.lib.entries[key]])
 );
 
-const babelLoader = {
-  loader: "babel-loader",
-  options: {
-    plugins: [
-      "@babel/plugin-proposal-async-generator-functions",
-      "@babel/proposal-class-properties",
-      "@babel/plugin-syntax-flow"
-    ],
-    presets: [
-      [
-        "@babel/preset-env",
-        {
-          useBuiltIns: "usage",
-          corejs: "3",
-          shippedProposals: true,
-          targets: {
-            node: "current"
-          },
-          modules: "commonjs"
-        }
-      ],
-      "@babel/typescript",
-      "@babel/preset-flow"
-    ]
-  }
-};
-
 module.exports = {
   stats: 'minimal',
   context: __dirname,
   mode: slsw.lib.webpack.isLocal ? "development" : "production",
   entry: slsw.lib.entries,
-  devtool: slsw.lib.webpack.isLocal ? "eval" : "inline-source-map",
+  devtool: slsw.lib.webpack.isLocal ? "cheap-module-eval-source-map" : "inline-source-map",
   resolve: {
-    extensions: [".mjs", ".json", ".ts", ".tsx", ".js", ".jsx"],
+    extensions: [".mjs", ".json", ".ts"],
     symlinks: false,
     cacheWithContext: false
   },
@@ -58,7 +31,7 @@ module.exports = {
   },
   target: "node",
   optimization: {
-    minimize: true,
+    minimize: false,
     noEmitOnErrors: true,
     minimizer:[
       new TerserPlugin(),
@@ -75,23 +48,18 @@ module.exports = {
     rules: [
       {
         test: /\.(tsx?)$/,
-        use: [
-          babelLoader,
-          {
-            loader: "ts-loader",
-            options: {
-              transpileOnly: true
-            }
-          }
-        ],
+        loader: 'ts-loader',
         exclude: [
           [
             path.resolve(__dirname, "node_modules"),
             path.resolve(__dirname, ".serverless"),
-            path.resolve(__dirname, ".webpack"),
-            path.resolve(__dirname, "build"),
+            path.resolve(__dirname, ".webpack")
           ]
-        ]
+        ],
+        options: {
+          transpileOnly: true,
+          experimentalWatchApi: true,
+        },
       }
     ]
   }

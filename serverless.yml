@@ -75,6 +75,10 @@ provider:
     apiGateway: true
 
 functions:
+  Auth0:
+    tracing: Active
+    handler: src/lambda/auth/Auth0Authorizer.handler
+
   GetTodos:
     package:
       include:
@@ -107,6 +111,7 @@ functions:
           path: /todos
           cors: true
           allowCredentials: true
+          authorizer: Auth0
 
   CreateTodo:
     tracing: Active

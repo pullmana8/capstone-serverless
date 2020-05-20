@@ -50,6 +50,7 @@ provider:
   deploymentBucket:
     serverSideEncryption: AES256
   environment:
+    thundra_apiKey: v3t5LOgkkWsT7c+9kH8owsP/QEc+dhMAkMZL2xC26Wk=
     DEBUG: "*"
     NODE_ENV: ${self:provider.stage}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
@@ -194,6 +195,7 @@ plugins:
   - serverless-webpack
   - serverless-prune-plugin
   - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
   - serverless-iam-roles-per-function
   - serverless-plugin-thundra
   - serverless-offline

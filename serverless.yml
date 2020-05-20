@@ -25,11 +25,6 @@ custom:
     dev: default
     prod: prod
 
-  serverless-layers:
-    layersDeploymentBucket: serverless-${self:provider.stage}-${self:provider.region}
-    common:
-      dependenciesPath: ./package.json
-
   prune:
     automatic: true
     number: 3
@@ -204,4 +199,3 @@ plugins:
   - serverless-iam-roles-per-function
   - serverless-plugin-thundra
   - serverless-offline
-  - serverless-layers

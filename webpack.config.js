@@ -40,6 +40,7 @@ const babelLoader = {
 };
 
 module.exports = {
+  stats: 'minimal',
   context: __dirname,
   mode: slsw.lib.webpack.isLocal ? "development" : "production",
   entry: slsw.lib.entries,

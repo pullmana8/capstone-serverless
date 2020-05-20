@@ -66,8 +66,6 @@ functions:
   GetTodos:
     tracing: Active
     handler: src/lambda/functions/GetTodos.handler
-    layers:
-      - arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:8
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -97,8 +95,6 @@ functions:
   CreateTodo:
     tracing: Active
     handler: src/lambda/functions/NewTodo.handler
-    layers:
-      - arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:8
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -130,8 +126,6 @@ functions:
   UpdateTodo:
     tracing: Active
     handler: src/lambda/functions/UpdateTodo.handler
-    layers:
-      - arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:8
     iamRoleStatements:
       - Effect: Allow
         Action:

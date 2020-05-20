@@ -190,15 +190,16 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: '*'
+
 resources:
   - ${file(./services/apigateway/gateway.yml)}
   - ${file(./services/uploads/s3bucket.yml)}
   - ${file(./services/dynamodb/dynamodb.yml)}
-
 
 plugins:
   - serverless-webpack
   - serverless-prune-plugin
   - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
+  - serverless-plugin-thundra
   - serverless-offline

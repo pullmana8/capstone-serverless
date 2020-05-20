@@ -5,18 +5,21 @@ import {
   CustomAuthorizerResult,
   CustomAuthorizerHandler,
 } from 'aws-lambda';
+import { verify } from 'jsonwebtoken';
 
 const logger = new Logger('auth-user');
+
+const auth0Secret = process.env.AUTH_0_SECRET;
 
 export const handler: CustomAuthorizerHandler = async (
   event: CustomAuthorizerEvent
 ): Promise<CustomAuthorizerResult> => {
   try {
-    verifyToken(event.authorizationToken!);
-    logger.info('User was authorized', event.authorizationToken);
+    const decodedToken = verifyToken(event.authorizationToken!);
+    logger.infoObject('User was authorized', decodedToken);
 
     return {
-      principalId: 'user',
+      principalId: decodedToken.sub,
       policyDocument: {
         Version: '2012-10-17',
         Statement: [
@@ -56,5 +59,6 @@ function verifyToken(authHeader: string): JwtToken {
   const split = authHeader.split(' ');
   const token = split[1];
 
-  if (token !== '123') throw new Error('Invalid token');
+  return verify(token, auth0Secret) as JwtToken;
+  /*  if (token !== '123') throw new Error('Invalid token'); */
 }

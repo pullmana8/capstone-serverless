@@ -69,6 +69,7 @@ provider:
     ATTACHMENTS_BUCKET: attachments-urls-${self:provider.stage}-${self:provider.region}
     CONNECTIONS_TABLE: Connections-${self:provider.stage}-${self:provider.region}
     SIGNED_URL_EXPIRATION: 300
+    AUTH_0_SECRET: prhHoRkm5faCr1igkclfLT5wK8dsr5t20f1te0q-9qkmskMgJlOhJin9qdGa0k6W
 
   tracing:
     lambda: true

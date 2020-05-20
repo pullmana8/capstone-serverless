@@ -2,6 +2,7 @@
 import * as LambdaUtils from '@sailplane/lambda-utils';
 import { Logger } from '@sailplane/logger';
 import { TodoAccess } from '../../dataLayer/TodoAccess';
+import { getUserId } from '../../auth/utils';
 
 const logger = new Logger('list');
 
@@ -9,7 +10,12 @@ export const handler = LambdaUtils.wrapApiHandler(
   async (event: LambdaUtils.APIGatewayProxyEvent) => {
     logger.info('event:', event);
 
-    const todos = new TodoAccess();
+    const authorization = event.headers.Authorization;
+    const split = authorization.split(' ');
+    const jwtToken = split[1];
+    const userId = getUserId(jwtToken);
+
+    const todos = await new TodoAccess(userId);
 
     return {
       statusCode: 200,

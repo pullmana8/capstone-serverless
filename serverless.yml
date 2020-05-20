@@ -58,6 +58,7 @@ provider:
     TODOS_TABLE: TODOS-Serverless-${self:provider.stage}
     USER_ID_INDEX: UserIdIndex
     ATTACHMENTS_BUCKET: attachments-urls-${self:provider.stage}-${self:provider.region}
+    CONNECTIONS_TABLE: Connections-${self:provider.stage}-${self:provider.region}
 
   tracing:
     lambda: true
@@ -185,11 +186,24 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: '*'
+  ConnectHandler:
+    handler: "src/lambda/websocket/Connect.handler"
+    events:
+      -
+        websocket:
+          route: "$connect"
+  DisconnectHandler:
+    handler: "src/lambda/websocket/Disconnect.handler"
+    events:
+      -
+        websocket:
+          route: "$disconnect"
 
 resources:
   - ${file(./services/apigateway/gateway.yml)}
   - ${file(./services/uploads/s3bucket.yml)}
   - ${file(./services/dynamodb/dynamodb.yml)}
+  - ${file(./services/dynamodb/connections.yml)}
 
 plugins:
   - serverless-webpack

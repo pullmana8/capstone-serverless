@@ -4,6 +4,7 @@ const slsw = require("serverless-webpack");
 const TerserPlugin = require('terser-webpack-plugin');
 const nodeExternals = require("webpack-node-externals");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 
 const entries = {};
 
@@ -44,7 +45,7 @@ module.exports = {
   context: __dirname,
   mode: slsw.lib.webpack.isLocal ? "development" : "production",
   entry: slsw.lib.entries,
-  devtool: slsw.lib.webpack.isLocal ? "eval-source-map" : "source-map",
+  devtool: slsw.lib.webpack.isLocal ? "eval" : "inline-source-map",
   resolve: {
     extensions: [".mjs", ".json", ".ts", ".tsx", ".js", ".jsx"],
     symlinks: false,
@@ -58,10 +59,18 @@ module.exports = {
   target: "node",
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin()]
+    noEmitOnErrors: true,
+    minimizer:[
+      new TerserPlugin(),
+    ]
   },
   externals: [nodeExternals()],
-  plugins: [new ForkTsCheckerWebpackPlugin()],
+  plugins: [
+    new ForkTsCheckerWebpackPlugin({
+      eslint: true
+    }),
+    new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),
+  ],
   module: {
     rules: [
       {
@@ -69,7 +78,10 @@ module.exports = {
         use: [
           babelLoader,
           {
-            loader: "ts-loader"
+            loader: "ts-loader",
+            options: {
+              transpileOnly: true
+            }
           }
         ],
         exclude: [

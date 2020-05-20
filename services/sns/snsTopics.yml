@@ -1,22 +1,25 @@
 Resources:
-  SNSTopicPolicy:
-  Type: AWS::SNS::TopicPolicy
-  Properties:
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Effect: Allow
-          Principal:
-            AWS: "*"
-          Action: sns:Publish
-          Resource:
-            !Ref ImagesTopic
-          Condition:
-            ArnLike:
-              AWS:SourceArn: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}
-
   ImagesTopics:
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: Image bucket topic
-      Topic: ${self:custom.topicName}
+      TopicName: ${self:custom.topicName}
+
+  SNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action: sns:Publish
+            Resource:
+              !Ref ImagesTopics
+            Condition:
+              ArnLike:
+                AWS:SourceArn: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}
+      Topics:
+        - !Ref ImagesTopics
+

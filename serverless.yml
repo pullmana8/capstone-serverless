@@ -47,16 +47,19 @@ provider:
   logs:
     websocket:
       level: ERROR
+
   runtime: nodejs12.x
   region: us-east-2
   stage: ${opt.stage, 'dev'}
   profile: ${self:custom.profiles.${self:provider.stage}}
+
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
   deploymentBucket:
     serverSideEncryption: AES256
+
   environment:
-    thundra_apiKey: v3t5LOgkkWsT7c+9kH8owsP/QEc+dhMAkMZL2xC26Wk=
     DEBUG: "*"
     NODE_ENV: ${self:provider.stage}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
@@ -66,6 +69,7 @@ provider:
     ATTACHMENTS_BUCKET: attachments-urls-${self:provider.stage}-${self:provider.region}
     CONNECTIONS_TABLE: Connections-${self:provider.stage}-${self:provider.region}
     SIGNED_URL_EXPIRATION: 300
+
   tracing:
     lambda: true
     apiGateway: true
@@ -103,6 +107,7 @@ functions:
           path: /todos
           cors: true
           allowCredentials: true
+
   CreateTodo:
     tracing: Active
     handler: src/lambda/functions/NewTodo.handler
@@ -134,6 +139,7 @@ functions:
             description: Create and insert item into todo table
             requestModels:
               'application/json': CreateTodoRequest
+
   UpdateTodo:
     tracing: Active
     handler: src/lambda/functions/UpdateTodo.handler
@@ -168,6 +174,7 @@ functions:
             description: Update and insert item into todo table
             requestModels:
               'application/json': UpdateTodoRequest
+
   DeleteTodo:
     tracing: Active
     handler: src/lambda/functions/DeleteTodo.handler
@@ -198,7 +205,7 @@ functions:
 
   ConnectHandler:
     tracing: Active
-    handler: "src/lambda/websocket/Connect.handler"
+    handler: src/lambda/websocket/Connect.handler
     events:
       -
         websocket:
@@ -235,12 +242,35 @@ functions:
           - dynamodb:PutItem
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
+
+  SendUploadNotifications:
+    tracing: Active
+    environment:
+      STAGE: ${self:provider.stage}
+      API_ID:
+        Ref: WebsocketsApi
+    handler: src/lambda/s3/SendNotification.handler
+    events:
+      -
+        sns:
+          arn:
+            Fn::Join:
+              - ":"
+              -
+                - arn:aws:sns
+                -
+                  Ref: AWS::Region
+                -
+                  Ref: AWS::AccountId
+                - ${self:custom.topicName}
+          topicName: ${self:custom.topicName}
+
 resources:
   - ${file(./services/apigateway/gateway.yml)}
   - ${file(./services/uploads/s3bucket.yml)}
   - ${file(./services/dynamodb/dynamodb.yml)}
-#  - ${file(./services/dynamodb/connections.yml)}
-#  - ${file(./services/sns/snsTopics.yml)}
+  - ${file(./services/dynamodb/connections.yml)}
+  - ${file(./services/sns/snsTopics.yml)}
 
 plugins:
   - serverless-jetpack

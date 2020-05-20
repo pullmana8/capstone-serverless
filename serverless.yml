@@ -6,25 +6,6 @@ package:
   individually: true
 
 custom:
-  defaultStage: dev
-  profiles:
-    dev: default
-    prod: prod
-
-  serverless-layers:
-    layersDeploymentBucket: serverless-${self:provider.stage}-${self:provider.region}
-    common:
-      dependenciesPath: ./package.json
-
-  webpack:
-    webpackConfig: ./webpack.config.js
-    includeModules:
-      forceExclude:
-        - aws-sdk
-    packager: npm
-    packagerOptions:
-      scripts:
-        - rm -rf node_modules/aws-sdk
   documentation:
     api:
       info:
@@ -38,6 +19,30 @@ custom:
       - name: UpdateTodoRequest
         contentType: application/json
         schema: ${file(validators/update-todo-request.json)}
+
+  defaultStage: dev
+  profiles:
+    dev: default
+    prod: prod
+
+  serverless-layers:
+    layersDeploymentBucket: serverless-${self:provider.stage}-${self:provider.region}
+    common:
+      dependenciesPath: ./package.json
+
+  prune:
+    automatic: true
+    number: 3
+
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    packager: npm
+    packagerOptions:
+      scripts:
+        - rm -rf node_modules/aws-sdk
 
 provider:
   name: aws
@@ -199,3 +204,4 @@ plugins:
   - serverless-iam-roles-per-function
   - serverless-plugin-thundra
   - serverless-offline
+  - serverless-layers

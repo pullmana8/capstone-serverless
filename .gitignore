@@ -14,5 +14,4 @@ yarn.lock
 .webpack
 .dynamodb
 .vscode
-build
-dist
+.build

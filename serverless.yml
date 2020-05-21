@@ -8,17 +8,22 @@ package:
     - "!**/node_modules/aws-sdk/**"
 
 custom:
+  # Custom config for Jetpack
   jetpack:
     preInclude:
       - "!**"
+    include:
+      - "**"
+      - "!**/node_modules/aws-sdk/**"
+      - "package.json"
     trace:
       ignores:
         - "aws-sdk"
     dynamic:
       bail: true
-
+  # Topic Name for SNS
   topicName: imagesTopic-${self:provider.stage}
-
+  # Documentation for the API
   documentation:
     api:
       info:
@@ -32,33 +37,33 @@ custom:
       - name: UpdateTodoRequest
         contentType: application/json
         schema: ${file(validators/update-todo-request.json)}
-
+  # Dev and Prod stages
   defaultStage: dev
   profiles:
     dev: default
     prod: prod
-
+  # Prune previous versions of artifacts
   prune:
     automatic: true
     number: 3
 
 provider:
   name: aws
+  # Logs for websocket
   logs:
     websocket:
       level: ERROR
-
+  # Runtime for NodeJS
   runtime: nodejs12.x
   region: us-east-2
   stage: ${opt.stage, 'dev'}
   profile: ${self:custom.profiles.${self:provider.stage}}
-
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
-
+  # Make Deployment Bucket AES256
   deploymentBucket:
     serverSideEncryption: AES256
-
+  # Setup environment
   environment:
     DEBUG: "*"
     NODE_ENV: ${self:provider.stage}
@@ -69,8 +74,40 @@ provider:
     ATTACHMENTS_BUCKET: attachments-urls-${self:provider.stage}-${self:provider.region}
     CONNECTIONS_TABLE: Connections-${self:provider.stage}-${self:provider.region}
     SIGNED_URL_EXPIRATION: 300
-    AUTH_0_SECRET: prhHoRkm5faCr1igkclfLT5wK8dsr5t20f1te0q-9qkmskMgJlOhJin9qdGa0k6W
+    AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
+    AUTH_0_SECRET_FIELD: auth0Secret
 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - logs:CreateLogStream
+        - logs:CreateLogGroup
+        - logs:PutLogEvents
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: !Ref Auth0Secret
+    - Effect: Allow
+      Action:
+        - kms:Decrypt
+      Resource: !GetAtt KMSKey.Arn
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
+
+  # XRay Tracing active
   tracing:
     lambda: true
     apiGateway: true
@@ -79,13 +116,27 @@ functions:
   Auth0:
     tracing: Active
     handler: src/lambda/auth/Auth0Authorizer.handler
+    events:
+      - sqs:
+          arn:
+            Fn::Join:
+              - ':'
+              - - arn
+                - aws
+                - sqs
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - authorizer-user
 
   GetTodos:
     package:
       include:
+        - "src/**"
         - "package.json"
+        - "!**/node_modules/aws-sdk/**"
     tracing: Active
     handler: src/lambda/functions/GetTodos.handler
+    iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -95,17 +146,6 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
-      - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: "*"
-      - Effect: Allow
-        Action:
-          - logs:CreateLogStream
-          - logs:CreateLogGroup
-          - logs:PutLogEvents
-        Resource: "*"
     events:
       - http:
           method: get
@@ -113,6 +153,39 @@ functions:
           cors: true
           allowCredentials: true
           authorizer: Auth0
+      - sqs:
+          arn:
+            Fn::Join:
+              - ':'
+              - - arn
+                - aws
+                - sqs
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - get-todo
+      - stream:
+          type: kinesis
+          arn:
+            Fn::Join:
+              - ':'
+              - - arn
+                - aws
+                - kinesis
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - 'stream/retrieve-todo'
+      - sns:
+          arn:
+            Fn::Join:
+              - ":"
+              -
+                - arn:aws:sns
+                -
+                  Ref: AWS::Region
+                -
+                  Ref: AWS::AccountId
+                - ${self:custom.topicName}
+          topicName: ${self:custom.topicName}
 
   CreateTodo:
     tracing: Active
@@ -122,17 +195,6 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: "*"
-      - Effect: Allow
-        Action:
-          - logs:CreateLogStream
-          - logs:CreateLogGroup
-          - logs:PutLogEvents
-        Resource: "*"
     events:
       - http:
           method: post
@@ -157,17 +219,6 @@ functions:
           - dynamodb:GetItem
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: "*"
-      - Effect: Allow
-        Action:
-          - logs:CreateLogStream
-          - logs:CreateLogGroup
-          - logs:PutLogEvents
-        Resource: "*"
     events:
       - http:
           method: patch
@@ -193,21 +244,10 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: '*'
-      - Effect: Allow
-        Action:
           - dynamodb:Query
           - dynamodb:DeleteItem
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action:
-          - logs:CreateLogStream
-          - logs:CreateLogGroup
-          - logs:PutLogEvents
-        Resource: '*'
 
   ConnectHandler:
     tracing: Active
@@ -217,11 +257,6 @@ functions:
         websocket:
           route: "$connect"
     iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: '*'
       - Effect: Allow
         Action:
           - dynamodb:Scan
@@ -237,11 +272,6 @@ functions:
         websocket:
           route: "$disconnect"
     iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: '*'
       - Effect: Allow
         Action:
           - dynamodb:Scan
@@ -277,12 +307,15 @@ resources:
   - ${file(./services/dynamodb/dynamodb.yml)}
   - ${file(./services/dynamodb/connections.yml)}
   - ${file(./services/sns/snsTopics.yml)}
+  - ${file(./services/kmskey/kms.yml)}
 
 plugins:
   - serverless-jetpack
   - serverless-plugin-typescript
+  - serverless-step-functions
   - serverless-prune-plugin
   - serverless-reqvalidator-plugin
   - serverless-aws-documentation
   - serverless-iam-roles-per-function
+  - serverless-pseudo-parameters
   - serverless-offline

@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import * as LambdaUtils from '@sailplane/lambda-utils';
-import { Logger } from '@sailplane/logger';
+import * as LambdaUtils from '@sailplane/lambda-utils'
+import { Logger } from '@sailplane/logger'
 
-const AWSXRay = require('aws-xray-sdk');
-const AWS = AWSXRay.captureAWS(require('aws-sdk'));
-const docClient = new AWS.DynamoDB.DocumentClient();
-const todosTable = process.env.TODOS_TABLE;
-const logger = new Logger('update');
+const AWSXRay = require('aws-xray-sdk')
+const AWS = AWSXRay.captureAWS(require('aws-sdk'))
+const docClient = new AWS.DynamoDB.DocumentClient()
+const todosTable = process.env.TODOS_TABLE
+const logger = new Logger('update')
 
 interface TodoUpdate {
-  name: string;
-  dueDate: string;
-  done: boolean;
+  name: string
+  dueDate: string
+  done: boolean
 }
 
 /* interface UpdateTodoRequest {
@@ -23,7 +23,7 @@ interface TodoUpdate {
 async function updateTodoItem(
   request: TodoUpdate,
   userId: string,
-  todoId: string
+  todoId: string,
 ) {
   const updateTodo = await docClient
     .update({
@@ -38,24 +38,24 @@ async function updateTodoItem(
       },
       ReturnValues: 'UPDATED_NEW',
     })
-    .promise();
+    .promise()
 
-  return { Updated: updateTodo };
+  return { Updated: updateTodo }
 }
 
 export const handler = LambdaUtils.wrapApiHandler(
   async (event: LambdaUtils.APIGatewayProxyEvent) => {
-    logger.debug(event.body);
+    logger.debug(event.body)
 
-    const todoId = event.pathParameters.todoId;
-    logger.info('List todo id for user', todoId);
+    const todoId = event.pathParameters.todoId
+    logger.info('List todo id for user', todoId)
 
-    const items = await updateTodoItem;
+    const items = await updateTodoItem
 
     if (!items) {
       logger.error(
-        `user requesting to update an non-existing todo with id ${todoId}`
-      );
+        `user requesting to update an non-existing todo with id ${todoId}`,
+      )
 
       return {
         statusCode: 400,
@@ -65,9 +65,9 @@ export const handler = LambdaUtils.wrapApiHandler(
             input: event,
           },
           null,
-          2
+          2,
         ),
-      };
+      }
     } else {
       return {
         statusCode: 204,
@@ -77,9 +77,9 @@ export const handler = LambdaUtils.wrapApiHandler(
             items,
           },
           null,
-          2
+          2,
         ),
-      };
+      }
     }
-  }
-);
+  },
+)

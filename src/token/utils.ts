@@ -1,5 +1,5 @@
-import { decode } from 'jsonwebtoken';
-import { JwtToken } from './JwtToken';
+import { decode } from 'jsonwebtoken'
+import { JwtToken } from './JwtToken'
 
 /**
  * Parse a JWT token and return a user id
@@ -7,6 +7,6 @@ import { JwtToken } from './JwtToken';
  * @returns a user id from the JWT token
  */
 export function getUserId(jwtToken: string): string {
-  const decodedJwt = decode(jwtToken) as JwtToken;
-  return decodedJwt.sub;
+  const decodedJwt = decode(jwtToken) as JwtToken
+  return decodedJwt.sub
 }

@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import * as LambdaUtils from '@sailplane/lambda-utils';
-import { Logger } from '@sailplane/logger';
-import { TodoAccess } from '../../dataLayer/TodoAccess';
-import { getUserId } from '../../auth/utils';
+import * as LambdaUtils from '@sailplane/lambda-utils'
+import { Logger } from '@sailplane/logger'
+import { TodoAccess } from '../../dataLayer/TodoAccess'
+import { getUserId } from '../../token/utils'
 
-const logger = new Logger('list');
+const logger = new Logger('list')
 
 export const handler = LambdaUtils.wrapApiHandler(
   async (event: LambdaUtils.APIGatewayProxyEvent) => {
-    logger.info('event:', event);
+    logger.info('event:', event)
 
-    const authorization = event.headers.Authorization;
-    const split = authorization.split(' ');
-    const jwtToken = split[1];
-    const userId = getUserId(jwtToken);
+    const authorization = event.headers.Authorization
+    const split = authorization.split(' ')
+    const jwtToken = split[1]
+    const userId = getUserId(jwtToken)
 
-    const todos = await new TodoAccess(userId);
+    const todos = await new TodoAccess(userId)
 
     return {
       statusCode: 200,
@@ -24,8 +24,8 @@ export const handler = LambdaUtils.wrapApiHandler(
           todos,
         },
         null,
-        2
+        2,
       ),
-    };
-  }
-);
+    }
+  },
+)

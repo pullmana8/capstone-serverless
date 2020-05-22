@@ -1,7 +1,7 @@
 import { Logger } from '@sailplane/logger'
 import { verify } from 'jsonwebtoken'
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
-import * as middy from 'middy'
+import * as middy from '@middy/core'
 import { secretsManager } from 'middy/middlewares'
 import { JwtPayload } from '../../token/JwtPayload'
 
@@ -16,10 +16,15 @@ const secretField = process.env.AUTH_0_SECRET_FIELD
 Cache secret if a Lambda is reused
 let cachedSecret: string */
 
-export const handler = middy(async (event: CustomAuthorizerEvent, context): Promise<CustomAuthorizerResult> => {
+// @ts-ignore
+export const handler = middy(
+  async (
+    event: CustomAuthorizerEvent,
+    context,
+  ): Promise<CustomAuthorizerResult> => {
     try {
       const decodedToken = await verifyToken(
-        event.authorizationToken,
+        event.authorizationToken!,
         context.AUTH0SECRET[secretField!],
       )
       logger.infoObject('User was authorized', decodedToken)
@@ -93,10 +98,10 @@ async function verifyToken(
 handler.use(
   secretsManager({
     cache: true,
-    cacheExpiryinMillis: 60000,
-    throwonFailedCall: true,
+    cacheExpiryInMillis: 60000,
+    throwOnFailedCall: true,
     secrets: {
-      AUTH0SECRET: secretId,
+      AUTH0SECRET: secretId!,
     },
   }),
 )

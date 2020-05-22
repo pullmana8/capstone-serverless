@@ -63,7 +63,7 @@ module.exports = {
         ],
         "@typescript-eslint/class-name-casing": "error",
         "@typescript-eslint/consistent-type-assertions": "error",
-        "@typescript-eslint/dot-notation": "error",
+        "@typescript-eslint/dot-notation": "warn",
         "@typescript-eslint/indent": "off",
         "@typescript-eslint/interface-name-prefix": "error",
         "@typescript-eslint/member-delimiter-style": [
@@ -89,7 +89,7 @@ module.exports = {
         "@typescript-eslint/no-this-alias": "error",
         "@typescript-eslint/no-unused-expressions": "error",
         "@typescript-eslint/no-use-before-define": "off",
-        "@typescript-eslint/no-var-requires": "error",
+        "@typescript-eslint/no-var-requires": "warn",
         "@typescript-eslint/prefer-for-of": "error",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/prefer-namespace-keyword": "error",

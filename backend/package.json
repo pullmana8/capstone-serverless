@@ -111,6 +111,7 @@
     "serverless-jetpack": "^0.10.6",
     "serverless-layers": "^2.2.4",
     "serverless-localstack": "^0.4.24",
+    "serverless-newrelic-lambda-layers": "^0.1.18",
     "serverless-secret-baker": "^1.2.0",
     "serverless-step-functions": "^2.19.0",
     "standard-version": "^8.0.0",

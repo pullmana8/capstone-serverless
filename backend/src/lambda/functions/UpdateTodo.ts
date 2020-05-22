@@ -37,7 +37,7 @@ export const handler = cors(
         body: JSON.stringify(
           {
             message: `Item successfully updated ${items}`,
-            items,
+            items: items,
           },
           null,
           2,

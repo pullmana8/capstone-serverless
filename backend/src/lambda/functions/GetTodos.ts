@@ -17,7 +17,7 @@ export const handler = cors(
       statusCode: 200,
       body: JSON.stringify(
         {
-          todos,
+          items: todos,
         },
         null,
         2,

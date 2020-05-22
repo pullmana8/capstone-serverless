@@ -30,7 +30,7 @@ const db = process.env.IS_OFFLINE
   : new DynamoDB.DocumentClient()
 
 export async function listAllTodos(userId: string): Promise<TodoItem[]> {
-  logger.debug(`List todo items for user`)
+  logger.debug(`List todo items for user`, userId)
   const params = {
     TableName: todosTable!,
     IndexName: userIdIndex!,
@@ -49,14 +49,14 @@ export async function createTodoItem(
   userId: string,
   payload: CreateTodoRequest,
 ): Promise<TodoItem> {
-  const newId = uuid.v4()
+  const todoId = uuid.v4()
   const timestamp = new Date().toISOString()
   const newItem = {
     TableName: todosTable!,
     ConditionExpression:
       'attribute_not_exists(todoId) AND attribute_not_exists(userId)',
     Item: {
-      todoId: newId,
+      todoId: todoId,
       userid: userId,
       createdAt: timestamp,
       name: payload.name,

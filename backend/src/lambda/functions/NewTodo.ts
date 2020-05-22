@@ -23,7 +23,7 @@ export const handler = cors(
       body: JSON.stringify(
         {
           message: `Item successfully created ${items}`,
-          items,
+          items: items,
         },
         null,
         2,

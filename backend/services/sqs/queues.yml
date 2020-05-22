@@ -1,0 +1,5 @@
+Resources:
+  GetTodoQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ${self:custom.queueName}

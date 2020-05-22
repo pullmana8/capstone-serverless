@@ -1,0 +1,6 @@
+Resources:
+  todosStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: ${self:custom.streamName}
+      ShardCount: 1

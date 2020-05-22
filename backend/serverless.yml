@@ -8,6 +8,8 @@ package:
     - "!node_modules/aws-sdk/**"
 
 custom:
+  newRelic:
+    accountId: 2734830
   # Custom config for Jetpack
   jetpack:
     preInclude:
@@ -24,6 +26,8 @@ custom:
       bail: true
   # Topic Name for SNS
   topicName: imagesTopic-${self:provider.stage}
+  queueName: get-todos-${self:provider.stage}
+  streamName: todosStream-${self:provider.stage}
   # Documentation for the API
   documentation:
     api:
@@ -115,11 +119,26 @@ provider:
       Action:
         - kms:Decrypt
       Resource: !GetAtt KMSKey.Arn
-#    - Effect: Allow
-#      Action:
-#        - sns:Publish
-#      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
-
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
+    - Effect: Allow
+      Action:
+        - kinesis:GetRecords
+        - kinesis:GetShardIterator
+        - kinesis:DescribeStream
+        - kinesis:ListStreams
+        - kinesis:PutRecord
+        - kinesis:PutRecords
+      Resource:
+        Fn::GetAtt:
+          - todosStream
+          - Arn
+    - Effect: Allow
+      Action:
+      - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
   # XRay Tracing active
   tracing:
     lambda: true
@@ -130,21 +149,20 @@ functions:
     tracing: Active
     handler: src/lambda/auth/RS256Auth0Authorizer.handler
     iamRoleStatementsInherit: true
- #   events:
- #     - sqs:
- #         arn:
- #           Fn::Join:
- #             - ':'
- #             - - arn
- #               - aws
- #               - sqs
- #               - Ref: AWS::Region
- #               - Ref: AWS::AccountId
- #               - authorizer-user
+    events:
+      - sqs:
+          arn:
+            Fn::Join:
+              - ':'
+              - - arn
+                - aws
+                - sqs
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - authorizer-user
   GetTodos:
     tracing: Active
     handler: src/lambda/functions/GetTodos.handler
-    timeout: 60
     iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
@@ -162,16 +180,11 @@ functions:
           cors: true
           allowCredentials: true
           authorizer: RS256
-#      - sqs:
-#          arn:
-#            Fn::Join:
-#              - ':'
-#              - - arn
-#                - aws
-#                - sqs
-#                - Ref: AWS::Region
-#                - Ref: AWS::AccountId
-#                - get-todo
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - GetTodoQueue
+              - Arn
 #      - stream:
 #          type: kinesis
 #          arn:
@@ -183,18 +196,6 @@ functions:
 #                - Ref: AWS::Region
 #                - Ref: AWS::AccountId
 #                - 'stream/retrieve-todo'
-#      - sns:
-#          arn:
-#            Fn::Join:
-#              - ":"
-#              -
-#                - arn:aws:sns
-#                -
-#                  Ref: AWS::Region
-#                -
-#                  Ref: AWS::AccountId
-#                - ${self:custom.topicName}
-#          topicName: ${self:custom.topicName}
 
   CreateTodo:
     tracing: Active
@@ -338,6 +339,15 @@ functions:
                 - ${self:custom.topicName}
           topicName: ${self:custom.topicName}
 
+  GenerateUploadUrl:
+    tracing: Active
+    handler: src/lambda/functions/GenerateUploadUrl.handler
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
+          cors: true
+
 # Testing serverx-ts which is using RxJS
 #  app:
 #    handler: src/handler.aws
@@ -352,6 +362,8 @@ resources:
   - ${file(./services/dynamodb/connections.yml)}
   - ${file(./services/sns/snsTopics.yml)}
   - ${file(./services/kmskey/kms.yml)}
+  - ${file(./services/sqs/queues.yml)}
+  - ${file(./services/kinesis/stream.yml)}
 
 plugins:
   - serverless-jetpack

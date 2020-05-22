@@ -1,4 +1,3 @@
-import * as AWSXRay from 'aws-xray-sdk'
 import { Logger } from '@sailplane/logger'
 import { cors } from 'lambda-proxy-cors'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
@@ -37,7 +36,7 @@ export const handler = cors(
         body: JSON.stringify(
           {
             message: `Item successfully updated ${items}`,
-            items: items,
+            items
           },
           null,
           2,

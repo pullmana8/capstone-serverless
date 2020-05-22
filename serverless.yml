@@ -115,10 +115,10 @@ provider:
       Action:
         - kms:Decrypt
       Resource: !GetAtt KMSKey.Arn
-    - Effect: Allow
-      Action:
-        - sns:Publish
-      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
+#    - Effect: Allow
+#      Action:
+#        - sns:Publish
+#      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
 
   # XRay Tracing active
   tracing:
@@ -130,17 +130,17 @@ functions:
     tracing: Active
     handler: src/lambda/auth/RS256Auth0Authorizer.handler
     iamRoleStatementsInherit: true
-    events:
-      - sqs:
-          arn:
-            Fn::Join:
-              - ':'
-              - - arn
-                - aws
-                - sqs
-                - Ref: AWS::Region
-                - Ref: AWS::AccountId
-                - authorizer-user
+ #   events:
+ #     - sqs:
+ #         arn:
+ #           Fn::Join:
+ #             - ':'
+ #             - - arn
+ #               - aws
+ #               - sqs
+ #               - Ref: AWS::Region
+ #               - Ref: AWS::AccountId
+ #               - authorizer-user
   GetTodos:
     tracing: Active
     handler: src/lambda/functions/GetTodos.handler
@@ -162,39 +162,39 @@ functions:
           cors: true
           allowCredentials: true
           authorizer: RS256
-      - sqs:
-          arn:
-            Fn::Join:
-              - ':'
-              - - arn
-                - aws
-                - sqs
-                - Ref: AWS::Region
-                - Ref: AWS::AccountId
-                - get-todo
-      - stream:
-          type: kinesis
-          arn:
-            Fn::Join:
-              - ':'
-              - - arn
-                - aws
-                - kinesis
-                - Ref: AWS::Region
-                - Ref: AWS::AccountId
-                - 'stream/retrieve-todo'
-      - sns:
-          arn:
-            Fn::Join:
-              - ":"
-              -
-                - arn:aws:sns
-                -
-                  Ref: AWS::Region
-                -
-                  Ref: AWS::AccountId
-                - ${self:custom.topicName}
-          topicName: ${self:custom.topicName}
+#      - sqs:
+#          arn:
+#            Fn::Join:
+#              - ':'
+#              - - arn
+#                - aws
+#                - sqs
+#                - Ref: AWS::Region
+#                - Ref: AWS::AccountId
+#                - get-todo
+#      - stream:
+#          type: kinesis
+#          arn:
+#            Fn::Join:
+#              - ':'
+#              - - arn
+#                - aws
+#                - kinesis
+#                - Ref: AWS::Region
+#                - Ref: AWS::AccountId
+#                - 'stream/retrieve-todo'
+#      - sns:
+#          arn:
+#            Fn::Join:
+#              - ":"
+#              -
+#                - arn:aws:sns
+#                -
+#                  Ref: AWS::Region
+#                -
+#                  Ref: AWS::AccountId
+#                - ${self:custom.topicName}
+#          topicName: ${self:custom.topicName}
 
   CreateTodo:
     tracing: Active
@@ -222,28 +222,28 @@ functions:
             description: Create and insert item into todo table
             requestModels:
               'application/json': CreateTodoRequest
-      - sqs:
-          arn:
-            Fn::Join:
-              - ':'
-              - - arn
-                - aws
-                - sqs
-                - Ref: AWS::Region
-                - Ref: AWS::AccountId
-                - create-todo
-      - sns:
-          arn:
-            Fn::Join:
-              - ":"
-              -
-                - arn:aws:sns
-                -
-                  Ref: AWS::Region
-                -
-                  Ref: AWS::AccountId
-                - ${self:custom.topicName}
-          topicName: ${self:custom.topicName}
+#      - sqs:
+#          arn:
+#            Fn::Join:
+#              - ':'
+#              - - arn
+#                - aws
+#                - sqs
+#                - Ref: AWS::Region
+#                - Ref: AWS::AccountId
+#                - create-todo
+#      - sns:
+#          arn:
+#            Fn::Join:
+#              - ":"
+#              -
+#                - arn:aws:sns
+#                -
+#                  Ref: AWS::Region
+#                -
+#                  Ref: AWS::AccountId
+#                - ${self:custom.topicName}
+#          topicName: ${self:custom.topicName}
 
   UpdateTodo:
     tracing: Active

@@ -9,6 +9,6 @@ COPY tsconfig.json ./
 
 COPY src src
 
-EXPOST 3000/tcp
+EXPOSE 3000/tcp
 
 ENTRYPOINT ["npm", "run", "docker-dev"]

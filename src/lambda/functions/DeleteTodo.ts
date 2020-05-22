@@ -1,29 +1,15 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-import * as LambdaUtils from '@sailplane/lambda-utils'
 import { Logger } from '@sailplane/logger'
+import { cors } from 'lambda-proxy-cors'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { deleteTodoById } from '../../dataLayer/Database'
 
-const AWSXRay = require('aws-xray-sdk')
-const AWS = AWSXRay.captureAWS(require('aws-sdk'))
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
 const logger = new Logger('delete')
 
-async function deleteTodoById(userId: string, todoId: string) {
-  logger.debug('Deleting todo id for user', userId, todoId)
-
-  await docClient.delete({
-    TableName: todosTable,
-    Key: { userId, todoId },
-  }).promise
-
-  return null
-}
-
-export const handler = LambdaUtils.wrapApiHandler(
-  async (event: LambdaUtils.APIGatewayProxyEvent) => {
+export const handler = cors(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.debug(event.body)
+    const todoId = event.pathParameters ? event.pathParameters.todoId : ''
 
-    const todoId = event.pathParameters.todoId
     logger.info('List todo id for user', todoId)
 
     if (!todoId) {

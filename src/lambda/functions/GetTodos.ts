@@ -1,21 +1,17 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-import * as LambdaUtils from '@sailplane/lambda-utils'
+import { cors } from 'lambda-proxy-cors'
 import { Logger } from '@sailplane/logger'
-import { TodoAccess } from '../../dataLayer/TodoAccess'
-import { getUserId } from '../../token/utils'
-
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { parseAuthorizationHeader } from '../../token/utils'
+import { listAllTodos } from '../../dataLayer/Database'
 const logger = new Logger('list')
 
-export const handler = LambdaUtils.wrapApiHandler(
-  async (event: LambdaUtils.APIGatewayProxyEvent) => {
-    logger.info('event:', event)
+export const handler = cors(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    logger.infoObject('event: ', event)
 
-    const authorization = event.headers.Authorization
-    const split = authorization.split(' ')
-    const jwtToken = split[1]
-    const userId = getUserId(jwtToken)
-
-    const todos = await new TodoAccess(userId)
+    const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
+    const todos = await listAllTodos(jwtToken)
+    logger.info('todos: ', todos, jwtToken)
 
     return {
       statusCode: 200,

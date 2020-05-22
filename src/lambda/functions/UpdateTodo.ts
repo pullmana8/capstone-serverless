@@ -1,53 +1,16 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-import * as LambdaUtils from '@sailplane/lambda-utils'
+import * as AWSXRay from 'aws-xray-sdk'
 import { Logger } from '@sailplane/logger'
+import { cors } from 'lambda-proxy-cors'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { updateTodoItem } from '../../dataLayer/Database'
 
-const AWSXRay = require('aws-xray-sdk')
-const AWS = AWSXRay.captureAWS(require('aws-sdk'))
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
 const logger = new Logger('update')
 
-interface TodoUpdate {
-  name: string
-  dueDate: string
-  done: boolean
-}
-
-/* interface UpdateTodoRequest {
-  name: string
-  dueDate: string
-  done: boolean
-} */
-
-async function updateTodoItem(
-  request: TodoUpdate,
-  userId: string,
-  todoId: string,
-) {
-  const updateTodo = await docClient
-    .update({
-      TableName: todosTable,
-      Key: { userId, todoId },
-      ExpressionAttributeName: { '#N': 'name' },
-      UpdateExpression: 'set #N=:todoName, dueDate=:dueDate, done=:done',
-      ExpressionAttributeValues: {
-        ':todoName': request.name,
-        ':dueDate': request.dueDate,
-        ':done': request.done,
-      },
-      ReturnValues: 'UPDATED_NEW',
-    })
-    .promise()
-
-  return { Updated: updateTodo }
-}
-
-export const handler = LambdaUtils.wrapApiHandler(
-  async (event: LambdaUtils.APIGatewayProxyEvent) => {
+export const handler = cors(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.debug(event.body)
 
-    const todoId = event.pathParameters.todoId
+    const todoId = event.pathParameters ? event.pathParameters.todoId : ''
     logger.info('List todo id for user', todoId)
 
     const items = await updateTodoItem

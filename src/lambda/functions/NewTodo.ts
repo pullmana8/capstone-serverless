@@ -1,57 +1,23 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-import * as uuid from 'uuid'
-import * as LambdaUtils from '@sailplane/lambda-utils'
+import { cors } from 'lambda-proxy-cors'
 import { Logger } from '@sailplane/logger'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
+import { parseAuthorizationHeader } from '../../token/utils'
+import { createTodoItem } from '../../dataLayer/Database'
 
-const AWSXRay = require('aws-xray-sdk')
-const AWS = AWSXRay.captureAWS(require('aws-sdk'))
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
 const logger = new Logger('create')
 
-/* async function createTodoItem(request: CreateTodoRequest, userId: string): Promise<TodoItem> {
-  const itemId = uuid.v4()
+export const handler = cors(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    logger.infoObject('event: ', event)
 
-  const newItem = {
-    todoId: itemId,
-    userId,
-    createdAt: new Date().toISOString(),
-    name: request.name,
-    dueDate: request.name,
-    done: false
-  }
+    const newTodo: CreateTodoRequest =
+      typeof event.body === 'string' ? JSON.parse(event.body) : event.body
 
-  await docClient.put({
-    TableName: todosTable,
-    Item: newItem
-  }).promise()
+    const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
+    const items = await createTodoItem(jwtToken, newTodo)
+    logger.info('Creating todos for user: ', newTodo, jwtToken)
 
-  logger.info('Create and list items: ', newItem)
-  return newItem
-} */
-
-export const handler = LambdaUtils.wrapApiHandler(
-  async (event: LambdaUtils.APIGatewayProxyEvent) => {
-    logger.info(event.body)
-
-    const newTodo = event.body
-    logger.info('Creating todo item for user', newTodo)
-
-    const itemId = uuid.v4()
-
-    const items = {
-      todoId: itemId,
-      ...newTodo,
-    }
-
-    await docClient
-      .put({
-        TableName: todosTable,
-        Item: items,
-      })
-      .promise()
-
-    logger.info('Create and list items: ', items)
     return {
       statusCode: 201,
       body: JSON.stringify(

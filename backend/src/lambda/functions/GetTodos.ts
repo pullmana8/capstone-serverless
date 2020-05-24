@@ -1,25 +1,34 @@
-import { cors } from 'lambda-proxy-cors'
-import { Logger } from '@sailplane/logger'
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-import { getAllTodos } from '../../businessLogic/todos'
+import { createLogger } from '../helpers/logger'
+import { listAllTodos } from '../../dataLayer/Database'
+import { runWarm, corsSuccessResponse } from '../helpers/utils'
+import { getUserId } from '../helpers/authHelper'
+import { APIGatewayProxyResult } from 'aws-lambda'
+import { S3Helper } from '../helpers/s3Helper'
 
-const logger = new Logger('list')
+const s3Helper = new S3Helper()
+const logger = createLogger('retrieve-todos')
 
-export const handler = cors(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    logger.infoObject('event: ', event)
-    const todos = await getAllTodos(event)
-    logger.info('todos: ', todos)
+const getTodos: Function = async (
+  event: AWSLambda.APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  logger.debug('event: ', event)
+  const authHeader = event.headers['Authorization']
+  const userId = getUserId(authHeader)
+  logger.info(`Log todo items for user ${userId}`)
+  const todos = await listAllTodos(userId)
+  logger.info('todos: ', todos)
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(
-        {
-          items: todos,
-        },
-        null,
-        2,
-      ),
-    }
-  },
-)
+  for (const record of todos) {
+    record.attachmentUrl = await s3Helper.getTodoAttachmentUrl(record.todoId)
+  }
+
+  const response = corsSuccessResponse({
+    message: 'Retrieved todos',
+    items: todos,
+    input: event,
+  })
+
+  return response
+}
+
+export default runWarm(getTodos)

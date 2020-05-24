@@ -37,7 +37,7 @@ module.exports = {
             }
         ],
         "@typescript-eslint/ban-types": [
-            "error",
+            "warn",
             {
                 "types": {
                     "Object": {
@@ -65,7 +65,7 @@ module.exports = {
         "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/dot-notation": "warn",
         "@typescript-eslint/indent": "off",
-        "@typescript-eslint/interface-name-prefix": "error",
+        "@typescript-eslint/interface-name-prefix": "warn",
         "@typescript-eslint/member-delimiter-style": [
             "off",
             {

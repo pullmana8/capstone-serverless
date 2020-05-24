@@ -1,12 +1,13 @@
 /* eslint-disable id-blacklist */
 import * as uuid from 'uuid'
-import { Logger } from '@sailplane/logger'
 import { DynamoDB } from 'aws-sdk'
 import { TodoItem } from '../models/TodoItem'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
+import { createLogger } from '../lambda/helpers/logger'
 
-const logger = new Logger('todos-access')
+const logger = createLogger('todos-access')
+
 const todosTable = process.env.TODOS_TABLE
 const userIdIndex = process.env.USER_ID_INDEX
 
@@ -30,7 +31,7 @@ const db = process.env.IS_OFFLINE
   : new DynamoDB.DocumentClient()
 
 export async function listAllTodos(userId: string): Promise<TodoItem[]> {
-  logger.debug(`List todo items for user`, userId)
+  logger.debug(`List todos items for user`, userId)
 
   const params = {
     TableName: todosTable!,
@@ -39,10 +40,10 @@ export async function listAllTodos(userId: string): Promise<TodoItem[]> {
     ExpressionAttributeValues: {
       ':userId': userId,
     },
-    ReturnValues: 'UPDATED_NEW',
   }
+
   const items = await db.query(params).promise()
-  logger.info('List items: ', items)
+  logger.info('List items: ', items, userId)
   return items.Items as TodoItem[]
 }
 
@@ -51,18 +52,18 @@ export async function createTodoItem(
   payload: CreateTodoRequest,
 ): Promise<TodoItem> {
   logger.debug('Create todo items for user', userId)
-  const todoId = uuid.v4()
+  const itemId = uuid.v4()
   const timestamp = new Date().toISOString()
+
   const newItem = {
     TableName: todosTable!,
-    ConditionExpression: 'attribute_not_exists(todoId) AND attribute_not_exists(userId)',
     Item: {
-      todoId,
-      userid: userId,
+      userId,
+      todoId: itemId,
       createdAt: timestamp,
       name: payload.name,
       dueDate: payload.dueDate,
-      done: payload.done,
+      done: false,
     },
   }
 
@@ -74,20 +75,17 @@ export async function createTodoItem(
 export async function updateTodoItem(
   userId: string,
   todoId: string,
-  request: UpdateTodoRequest,
+  payload: UpdateTodoRequest,
 ) {
   try {
     const params = {
       TableName: todosTable!,
-      ReturnValues: 'NONE',
-      ConditionExpression:
-        'attribute_exists(todoId) AND attribute_exists(userId)',
       UpdateExpression: 'set #N=:todoName, dueDate=:dueDate, done=:done',
       Key: { todoId, userId },
       ExpressionAttributeValues: {
-        ':todoName': request.name,
-        ':dueDate': request.dueDate,
-        ':done': request.done,
+        ':todoName': payload!.name,
+        ':dueDate': payload!.dueDate,
+        ':done': payload!.done,
       },
     }
 
@@ -99,14 +97,12 @@ export async function updateTodoItem(
   }
 }
 
-export async function deleteTodoById(userId: string, todoId: string) {
-  logger.debug('Deleting todo id for user', userId, todoId)
+export async function deleteTodoById(todoId: string) {
+  logger.debug('Deleting todo id for user', todoId)
   try {
     const params = {
       TableName: todosTable!,
-      ConditionExpression:
-        'attribute_exists(todoId) AND attribute_exists(userId)',
-      Key: { userId, todoId },
+      Key: { todoId },
     }
 
     await db.delete(params).promise()
@@ -116,4 +112,23 @@ export async function deleteTodoById(userId: string, todoId: string) {
       throw new err()
     }
   }
+}
+
+export async function getTodoById(
+  id: string,
+): Promise<{
+  TableName: string
+  KeyConditionExpression: string
+  ExpressionAttributeValues: { ':todoId': string }
+}> {
+  const params = {
+    TableName: todosTable!,
+    KeyConditionExpression: 'todoId = :todoId',
+    ExpressionAttributeValues: {
+      ':todoId': id,
+    },
+  }
+  await db.query(params).promise()
+
+  return params
 }

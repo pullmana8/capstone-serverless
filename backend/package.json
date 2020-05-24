@@ -54,22 +54,26 @@
     "prepare-release": "One-step: clean, build, test, publish docs, and prep a release"
   },
   "engines": {
-    "node": ">=8.9"
+    "node": "12.x"
   },
   "dependencies": {
     "@middy/core": "^1.0.0",
     "@sailplane/logger": "^2.0.1",
     "@types/uuid": "^8.0.0",
+    "apollo-server-lambda": "^2.13.1",
+    "aws-embedded-metrics": "^1.1.1",
     "aws-lambda": "^1.0.6",
     "aws-sdk": "^2.681.0",
     "aws-xray-sdk": "^3.0.1",
     "axios": "^0.19.2",
+    "express": "^4.17.1",
+    "graphql": "^15.0.0",
     "http-errors": "^1.7.3",
     "injection-js": "^2.3.0",
     "jsonwebtoken": "^8.5.1",
-    "lambda-proxy-cors": "^1.1.1",
     "middy": "^0.36.0",
     "parcel-bundler": "^1.12.4",
+    "pino": "^6.2.1",
     "rxjs": "^6.5.5",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-aws-documentation": "^1.1.0",
@@ -79,12 +83,15 @@
     "serverless-offline": "^6.1.7",
     "serverless-plugin-parcel": "^0.1.1",
     "serverless-plugin-typescript": "^1.1.9",
+    "serverless-plugin-warmup": "^4.9.0",
     "serverless-prune-plugin": "^1.4.3",
     "serverless-pseudo-parameters": "^2.5.0",
     "serverless-reqvalidator-plugin": "^1.0.3",
     "serverx-ts": "0.0.27",
     "sha.js": "^2.4.11",
-    "uuid": "^8.1.0"
+    "signale": "^1.4.0",
+    "uuid": "^8.1.0",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "@bitjson/npm-scripts-info": "^1.0.0",

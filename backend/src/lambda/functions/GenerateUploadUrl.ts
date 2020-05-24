@@ -1,47 +1,45 @@
-import { Injectable } from 'injection-js'
+import { createLogger } from '../helpers/logger'
+import { getUserId } from '../helpers/authHelper'
+import { getTodoById } from '../../dataLayer/Database'
 import {
-  AWSLambdaApp,
-  Handler,
-  Message,
-  HttpApp,
-  RequestLogger,
-  Compressor,
-  CORS,
-  Route,
-} from 'serverx-ts'
-import { Observable } from 'rxjs'
-import { tap } from 'rxjs/operators'
-import { createServer } from 'http'
+  corsErrorResponse,
+  corsSuccessResponse,
+  runWarm,
+} from '../helpers/utils'
+import { S3Helper } from '../helpers/s3Helper'
+import { APIGatewayProxyResult } from 'aws-lambda'
 
-@Injectable()
-class GenerateUploadUrl extends Handler {
-  handle(message$: Observable<Message>): Observable<Message> {
-    return message$.pipe(
-      tap(({ response }) => {
-        response.body = 'Hello, world!'
-      }),
+const logger = createLogger('generate-upload')
+
+const generateUploadUrl: Function = async (
+  event: AWSLambda.APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  logger.debug('event: ', event)
+  const authHeader = event.headers['Authorization']
+  const userId = getUserId(authHeader)
+
+  const todoId = event.pathParameters.todoId
+  if (!todoId) {
+    logger.error(
+      `User ${userId} requesting to upload url does not exist with id ${todoId}`,
     )
+    const response = corsErrorResponse({
+      message: 'TODO not exists',
+      input: event,
+    })
+    return response
+  }
+
+  const item = await getTodoById(todoId)
+  const url = new S3Helper().getPresignedUrl(todoId)
+  if (item) {
+    const success = corsSuccessResponse({
+      message: 'Upload url',
+      url,
+      input: event,
+    })
+    return success
   }
 }
 
-const routes: Route[] = [
-  {
-    path: '',
-    methods: ['GET'],
-    middlewares: [RequestLogger, Compressor, CORS],
-    children: [
-      {
-        path: '/generateUploadUrl',
-        handler: GenerateUploadUrl,
-      },
-    ],
-  },
-]
-
-const httpApp = new HttpApp(routes)
-createServer(httpApp.listen()).listen(4200)
-
-const lambdaApp = new AWSLambdaApp(routes)
-export function handler(event, context) {
-  return lambdaApp.handle(event, context)
-}
+export default runWarm(generateUploadUrl)

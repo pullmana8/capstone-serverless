@@ -1,46 +1,41 @@
-import { Logger } from '@sailplane/logger'
-import { cors } from 'lambda-proxy-cors'
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { createLogger } from '../helpers/logger'
+import {
+  corsErrorResponse,
+  corsSuccessResponse,
+  runWarm,
+} from '../helpers/utils'
 import { deleteTodoById } from '../../dataLayer/Database'
+import { getUserId } from '../helpers/authHelper'
+import { APIGatewayProxyResult } from 'aws-lambda'
 
-const logger = new Logger('delete')
+const logger = createLogger('delete')
 
-export const handler = cors(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    logger.debug(event.body)
-    const todoId = event.pathParameters ? event.pathParameters.todoId : ''
+const deleteTodo: Function = async (
+  event: AWSLambda.APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  logger.debug(event.body)
 
-    logger.info('List todo id for user', todoId)
+  const todoId = event.pathParameters ? event.pathParameters.todoId : ''
+  if (!todoId) {
+    logger.error('Invalid delete attempt without todo id')
+    const response = corsErrorResponse({
+      message: 'Invalid parameters',
+      input: event,
+    })
+    return response
+  }
 
-    if (!todoId) {
-      logger.error('Invalid delete attempt without todo id')
+  const authHeader = event.headers['Authorization']
+  const userId = getUserId(authHeader)
+  const deleteItem = await deleteTodoById(todoId)
 
-      return {
-        statusCode: 400,
-        body: JSON.stringify(
-          {
-            message: 'Invalid parameters',
-            input: event,
-          },
-          null,
-          2,
-        ),
-      }
-    }
+  logger.info('List todo id for user', todoId)
+  logger.info('User delete todo item', deleteItem)
+  const sucess = corsSuccessResponse({
+    message: `Sucessfully deleted item ${deleteItem} for user ${userId}`,
+    input: event,
+  })
+  return sucess
+}
 
-    const deleteItem = await deleteTodoById
-    logger.info('User delete todo item', deleteItem)
-
-    return {
-      statusCode: 204,
-      body: JSON.stringify(
-        {
-          message: `Sucessfully deleted item ${deleteItem}`,
-          input: event,
-        },
-        null,
-        2,
-      ),
-    }
-  },
-)
+export default runWarm(deleteTodo)

@@ -1,47 +1,43 @@
-import { Logger } from '@sailplane/logger'
-import { cors } from 'lambda-proxy-cors'
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { createLogger } from '../helpers/logger'
 import { updateTodoItem } from '../../dataLayer/Database'
+import {
+  corsErrorResponse,
+  corsSuccessResponse,
+  runWarm,
+} from '../helpers/utils'
+import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
+import { getUserId } from '../helpers/authHelper'
+import { APIGatewayProxyResult } from 'aws-lambda'
 
-const logger = new Logger('update')
+const logger = createLogger('update-todo')
 
-export const handler = cors(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    logger.debug(event.body)
+const updateTodo: Function = async (
+  event: AWSLambda.APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  logger.debug('event: ', event)
+  const todoId = event.pathParameters.todoId
+  const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
+  const authHeader = event.headers['Authorization']
+  const userId = getUserId(authHeader)
+  logger.info('List todo id for user', todoId)
 
-    const todoId = event.pathParameters ? event.pathParameters.todoId : ''
-    logger.info('List todo id for user', todoId)
-
-    const items = await updateTodoItem
-
-    if (!items) {
-      logger.error(
-        `user requesting to update an non-existing todo with id ${todoId}`,
-      )
-
-      return {
-        statusCode: 400,
-        body: JSON.stringify(
-          {
-            message: 'TODO item does not exist',
-            input: event,
-          },
-          null,
-          2,
-        ),
-      }
-    } else {
-      return {
-        statusCode: 204,
-        body: JSON.stringify(
-          {
-            message: `Item successfully updated ${items}`,
-            items
-          },
-          null,
-          2,
-        ),
-      }
-    }
-  },
-)
+  const items = await updateTodoItem(todoId, updatedTodo, userId)
+  if (!todoId) {
+    logger.error(
+      `user requesting to update an non-existing todo with id ${todoId}`,
+    )
+    const error = corsErrorResponse({
+      message: 'TODO item does not exist',
+      input: event,
+    })
+    return error
+  } else {
+    return corsSuccessResponse({
+      message: 'Items sucessfully updated for user',
+      userId,
+      items,
+      input: event,
+    })
+  }
+}
+export default runWarm(updateTodo)

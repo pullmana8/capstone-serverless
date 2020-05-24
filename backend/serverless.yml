@@ -8,8 +8,12 @@ package:
     - "!node_modules/aws-sdk/**"
 
 custom:
-  newRelic:
-    accountId: 2734830
+  warmup:
+    enabled: true
+    events:
+      - schedule: rate(5 minutes)
+    prewarm: true
+    concurrency: 1
   # Custom config for Jetpack
   jetpack:
     preInclude:
@@ -138,7 +142,15 @@ provider:
     - Effect: Allow
       Action:
       - dynamodb:PutItem
+      - dynamodb:Query
+      - dynamodb:UpdateItem
+      - dynamodb:GetItem
+      - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
   # XRay Tracing active
   tracing:
     lambda: true
@@ -162,17 +174,8 @@ functions:
                 - authorizer-user
   GetTodos:
     tracing: Active
-    handler: src/lambda/functions/GetTodos.handler
+    handler: src/lambda/functions/GetTodos.default
     iamRoleStatementsInherit: true
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action:
-          - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
     events:
       - http:
           method: get
@@ -185,31 +188,11 @@ functions:
             Fn::GetAtt:
               - GetTodoQueue
               - Arn
-#      - stream:
-#          type: kinesis
-#          arn:
-#            Fn::Join:
-#              - ':'
-#              - - arn
-#                - aws
-#                - kinesis
-#                - Ref: AWS::Region
-#                - Ref: AWS::AccountId
-#                - 'stream/retrieve-todo'
 
   CreateTodo:
     tracing: Active
-    handler: src/lambda/functions/NewTodo.handler
+    handler: src/lambda/functions/NewTodo.default
     iamRoleStatementsInherit: true
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action:
-          - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
     events:
       - http:
           method: post
@@ -223,45 +206,16 @@ functions:
             description: Create and insert item into todo table
             requestModels:
               'application/json': CreateTodoRequest
-#      - sqs:
-#          arn:
-#            Fn::Join:
-#              - ':'
-#              - - arn
-#                - aws
-#                - sqs
-#                - Ref: AWS::Region
-#                - Ref: AWS::AccountId
-#                - create-todo
-#      - sns:
-#          arn:
-#            Fn::Join:
-#              - ":"
-#              -
-#                - arn:aws:sns
-#                -
-#                  Ref: AWS::Region
-#                -
-#                  Ref: AWS::AccountId
-#                - ${self:custom.topicName}
-#          topicName: ${self:custom.topicName}
 
   UpdateTodo:
     tracing: Active
-    handler: src/lambda/functions/UpdateTodo.handler
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:Query
-          - dynamodb:UpdateItem
-          - dynamodb:GetItem
-          - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+    handler: src/lambda/functions/UpdateTodo.default
     events:
       - http:
           method: patch
           path: todos/{todoId}
           cors: true
+          authorizer: RS256
           allowCredentials: true
           reqValidatorName: RequestBodyValidator
           documentation:
@@ -269,23 +223,31 @@ functions:
             description: Update and insert item into todo table
             requestModels:
               'application/json': UpdateTodoRequest
+    iamRoleStatementsInherit: true
 
   DeleteTodo:
     tracing: Active
-    handler: src/lambda/functions/DeleteTodo.handler
+    handler: src/lambda/functions/DeleteTodo.default
     events:
       - http:
           method: delete
           path: todos/{todoId}
           cors: true
+          authorizer: RS256
           allowCredentials: true
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:Query
-          - dynamodb:DeleteItem
-          - dynamodb:GetItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+    iamRoleStatementsInherit: true
+
+  GenerateUploadUrl:
+    tracing: Active
+    handler: src/lambda/functions/GenerateUploadUrl.default
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
+          cors: true
+          authorizer: RS256
+          allowCredentials: true
+    iamRoleStatementsInherit: true
 
   ConnectHandler:
     tracing: Active
@@ -339,22 +301,6 @@ functions:
                 - ${self:custom.topicName}
           topicName: ${self:custom.topicName}
 
-  GenerateUploadUrl:
-    tracing: Active
-    handler: src/lambda/functions/GenerateUploadUrl.handler
-    events:
-      - http:
-          method: post
-          path: todos/{todoId}/attachment
-          cors: true
-
-# Testing serverx-ts which is using RxJS
-#  app:
-#    handler: src/handler.aws
-#    events:
-#      - http: ANY /
-#      - http: 'ANY {proxy+}'
-
 resources:
   - ${file(./services/apigateway/gateway.yml)}
   - ${file(./services/uploads/s3bucket.yml)}
@@ -373,6 +319,7 @@ plugins:
   - serverless-reqvalidator-plugin
   - serverless-aws-documentation
   - serverless-iam-roles-per-function
+  - serverless-plugin-warmup
   - serverless-pseudo-parameters
   - serverless-dynamodb-local
   - serverless-offline

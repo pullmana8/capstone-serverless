@@ -1,30 +1,28 @@
-import { cors } from 'lambda-proxy-cors'
-import { Logger } from '@sailplane/logger'
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { createLogger } from '../helpers/logger'
+import { getUserId } from '../helpers/authHelper'
+import { createTodoItem } from '../../dataLayer/Database'
+import { corsSuccessResponse, runWarm } from '../helpers/utils'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
-import { createTodo } from '../../businessLogic/todos'
+import { APIGatewayProxyResult } from 'aws-lambda'
 
-const logger = new Logger('create')
+const logger = createLogger('create-todo')
 
-export const handler = cors(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    logger.infoObject('event: ', event)
-    const newItem: CreateTodoRequest =
-      typeof event.body === 'string' ? JSON.parse(event.body) : event.body
+const newTodo: Function = async (
+  event: AWSLambda.APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  logger.debug('event: ', event)
+  const authHeader = event.headers['Authorization']
+  const userId = getUserId(authHeader)
+  logger.info(`Create todo items for user ${userId}`)
+  const newItem: CreateTodoRequest = JSON.parse(event.body)
+  const todos = await createTodoItem(userId, newItem)
+  const response = corsSuccessResponse({
+    message: 'Items created',
+    items: todos,
+    input: event,
+  })
 
-    const Item = await createTodo(event, newItem)
-    logger.info('Creating todos for user: ', event, newItem)
+  return response
+}
 
-    return {
-      statusCode: 201,
-      body: JSON.stringify(
-        {
-          message: `Item successfully created ${Item}`,
-          items: Item,
-        },
-        null,
-        2,
-      ),
-    }
-  },
-)
+export default runWarm(newTodo)

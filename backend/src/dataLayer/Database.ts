@@ -113,22 +113,3 @@ export async function deleteTodoById(todoId: string) {
     }
   }
 }
-
-export async function getTodoById(
-  id: string,
-): Promise<{
-  TableName: string
-  KeyConditionExpression: string
-  ExpressionAttributeValues: { ':todoId': string }
-}> {
-  const params = {
-    TableName: todosTable!,
-    KeyConditionExpression: 'todoId = :todoId',
-    ExpressionAttributeValues: {
-      ':todoId': id,
-    },
-  }
-  await db.query(params).promise()
-
-  return params
-}

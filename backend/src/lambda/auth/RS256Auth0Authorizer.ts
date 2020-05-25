@@ -1,9 +1,9 @@
 import { verify } from 'jsonwebtoken'
-import { Logger } from '@sailplane/logger'
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import { JwtPayload } from '../../token/JwtPayload'
+import { createLogger } from '../helpers/logger'
 
-const logger = new Logger('auth-user')
+const logger = createLogger('delete')
 
 const authCert = `-----BEGIN CERTIFICATE-----
 MIIDBzCCAe+gAwIBAgIJfWOD1NCGFHHsMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV
@@ -32,7 +32,7 @@ export const handler = async (
   logger.info('Authorizing a user', event.authorizationToken)
   try {
     const jwtToken = await verifyToken(event.authorizationToken!)
-    logger.infoObject('User was authorized', jwtToken)
+    logger.info('User was authorized', jwtToken)
 
     return {
       principalId: jwtToken.sub,

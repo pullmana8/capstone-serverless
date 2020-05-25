@@ -4,14 +4,6 @@ import { createLogger } from './logger'
 
 const logger = createLogger('generate-upload')
 
-let AWS
-if (process.env.X_AMX_TRACE_ID) {
-  AWS = require('aws-xray-sdk').captureAWS(require('aws-sdk'))
-} else {
-  logger.info('Serverless Offline detected; skipping AWS X-RAY Setup')
-  AWS = require('aws-sdk')
-}
-
 export class S3Helper {
   constructor(
     private readonly XAWS = AWSXRay.captureAWS(AWS),
@@ -39,7 +31,8 @@ export class S3Helper {
     } catch (err) {
       logger.error(err)
     }
-    return null!
+    logger.info(null)
+    return null
   }
 
   getPresignedUrl(todoId: string): string {

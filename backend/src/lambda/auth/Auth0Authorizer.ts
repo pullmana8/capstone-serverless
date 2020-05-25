@@ -1,11 +1,11 @@
-import { Logger } from '@sailplane/logger'
 import { verify } from 'jsonwebtoken'
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import * as middy from '@middy/core'
 import { secretsManager } from 'middy/middlewares'
 import { JwtPayload } from '../../token/JwtPayload'
+import { createLogger } from '../helpers/logger'
 
-const logger = new Logger('auth-user')
+const logger = createLogger('auth-user')
 
 /* const auth0Secret = process.env.AUTH_0_SECRET */
 const secretId = process.env.AUTH_0_SECRET_ID
@@ -27,7 +27,7 @@ export const handler = middy(
         event.authorizationToken!,
         context.AUTH0SECRET[secretField!],
       )
-      logger.infoObject('User was authorized', decodedToken)
+      logger.info('User was authorized', decodedToken)
 
       return {
         principalId: decodedToken.sub,

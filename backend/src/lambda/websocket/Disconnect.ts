@@ -4,9 +4,9 @@ import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
 } from 'aws-lambda'
-import { Logger } from '@sailplane/logger'
+import { createLogger } from '../helpers/logger'
 
-const logger = new Logger('connect')
+const logger = createLogger('disconnect')
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 const connectionsTable = process.env.CONNECTIONS_TABLE
@@ -22,7 +22,7 @@ export const handler: APIGatewayProxyHandler = async (
     id: connectionId,
   }
 
-  logger.infoObject('Removing item with key: ', key)
+  logger.info('Removing item with key: ', key)
 
   await docClient
     .delete({

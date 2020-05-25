@@ -1,9 +1,9 @@
 import { createLogger } from '../helpers/logger'
-import { listAllTodos } from '../../dataLayer/Database'
 import { runWarm, corsSuccessResponse } from '../helpers/utils'
 import { getUserId } from '../helpers/authHelper'
 import { APIGatewayProxyResult } from 'aws-lambda'
 import { S3Helper } from '../helpers/s3Helper'
+import { TodosAccess } from '../../dataLayer/TodosAccess'
 
 const s3Helper = new S3Helper()
 const logger = createLogger('retrieve-todos')
@@ -15,16 +15,15 @@ const getTodos: Function = async (
   const authHeader = event.headers['Authorization']
   const userId = getUserId(authHeader)
   logger.info(`Log todo items for user ${userId}`)
-  const todos = await listAllTodos(userId)
-  logger.info('todos: ', todos)
+  const result = await new TodosAccess().getUserTodos(userId)
+  logger.info('todos: ', result)
 
-  for (const record of todos) {
+  for (const record of result) {
     record.attachmentUrl = await s3Helper.getTodoAttachmentUrl(record.todoId)
   }
 
   const response = corsSuccessResponse({
-    message: 'Retrieved todos',
-    items: todos,
+    items: result,
     input: event,
   })
 

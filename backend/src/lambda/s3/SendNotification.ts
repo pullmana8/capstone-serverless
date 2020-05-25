@@ -1,8 +1,8 @@
 import { SNSHandler, SNSEvent, S3Event } from 'aws-lambda'
 import * as AWS from 'aws-sdk'
-import { Logger } from '@sailplane/logger'
+import { createLogger } from '../helpers/logger'
 
-const logger = new Logger('send-notification')
+const logger = createLogger('send-notification')
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 const connectionsTable = process.env.CONNECTIONS_TABLE
@@ -11,12 +11,12 @@ const apiId = process.env.API_ID
 
 const connectionParams = {
   apiVersion: '2018-11-29',
-  endpoint: `${apiId}.execute-api.us-east-1.amazonaws.com/${stage}`,
+  endpoint: `${apiId}.execute-api.us-east-2.amazonaws.com/${stage}`,
 }
 const apiGateway = new AWS.ApiGatewayManagementApi(connectionParams)
 
 export const handler: SNSHandler = async (event: SNSEvent) => {
-  logger.infoObject('Processing SNS event ', JSON.stringify(event))
+  logger.info('Processing SNS event ', JSON.stringify(event))
   for (const snsRecord of event.Records) {
     const s3EventStr = snsRecord.Sns.Message
     logger.info('Processing S3 event', s3EventStr)
@@ -62,7 +62,7 @@ async function sendMessageToClient(
       })
       .promise()
   } catch (e) {
-    logger.infoObject('Failed to send message', JSON.stringify(e))
+    logger.info('Failed to send message', JSON.stringify(e))
     if (e.statusCode === 410) {
       logger.info('Stale connection')
 

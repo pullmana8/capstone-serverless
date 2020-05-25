@@ -141,6 +141,7 @@ provider:
           - Arn
     - Effect: Allow
       Action:
+      - dynamodb:Scan
       - dynamodb:PutItem
       - dynamodb:Query
       - dynamodb:UpdateItem
@@ -176,6 +177,12 @@ functions:
     tracing: Active
     handler: src/lambda/functions/GetTodos.default
     iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - s3:PutObject
+        - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
     events:
       - http:
           method: get
@@ -248,7 +255,13 @@ functions:
           authorizer: RS256
           allowCredentials: true
     iamRoleStatementsInherit: true
-
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - s3:PutObject
+        - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
+        
   ConnectHandler:
     tracing: Active
     handler: src/lambda/websocket/Connect.handler

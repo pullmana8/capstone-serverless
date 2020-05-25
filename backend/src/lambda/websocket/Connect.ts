@@ -4,9 +4,9 @@ import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
 } from 'aws-lambda'
-import { Logger } from '@sailplane/logger'
+import { createLogger } from '../helpers/logger'
 
-const logger = new Logger('connect')
+const logger = createLogger('connect')
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 const connectionsTable = process.env.CONNECTIONS_TABLE
@@ -24,7 +24,7 @@ export const handler: APIGatewayProxyHandler = async (
     timestamp,
   }
 
-  logger.infoObject('Storing item: ', item)
+  logger.info('Storing item: ', item)
 
   await docClient
     .put({

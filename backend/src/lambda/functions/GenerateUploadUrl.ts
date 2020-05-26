@@ -18,10 +18,10 @@ const uploadUrl: Function = async (
   const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
   const todoId = event.pathParameters.todoId
-  const item = await todosAccess.getTodoById(todoId)
-  const url = await new TodosAccess().generateUploadUrl(todoId, userId)
+//  const item = await todosAccess.getTodoById(todoId)
+  const url = await new TodosAccess().generateUploadUrl(todoId)
 
-  if (item.Count === 0) {
+  /* if (item.Count === 0) {
     logger.error(
       `User ${userId} requesting to upload url does not exist with id ${todoId}`,
     )
@@ -42,15 +42,14 @@ const uploadUrl: Function = async (
       `user ${userId} requesting put url todo does not belong to account with id ${todoId}`,
     )
     return error
-  } else {
+  } else { */
     const success = corsSuccessResponse({
-      message: 'Upload url',
+      message: 'Upload url for user', userId,
       url,
       input: event,
     })
     logger.info('success')
     return success
   }
-}
 
 export default runWarm(uploadUrl)

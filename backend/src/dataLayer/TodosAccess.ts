@@ -71,7 +71,7 @@ export class TodosAccess {
     logger.info('List items: ', todo)
     return todo.Item as TodoItem
   }
-
+  /*
   async updateTodo(
     request: UpdateTodoRequest,
     userId: string,
@@ -83,22 +83,22 @@ export class TodosAccess {
         Key: { todoId, userId },
         UpdateExpression: 'set #N=:todoName, dueDate=:dueDate, done=:done',
         ExpressionAttributeValues: {
-          ':todoName': request!.name,
-          ':dueDate': request!.dueDate,
-          ':done': request!.done,
+          ':todoName': request.name,
+          ':dueDate': request.dueDate,
+          ':done': request.done,
         },
         ReturnValues: 'UPDATED_NEW',
       })
       .promise()
     return returnValue.Attributes as TodoUpdate
   }
-
+*/
   async generateUploadUrl(todoId: string, userId: string): Promise<string> {
     logger.info('Generating url')
 
     const url = this.s3Client.getSignedUrl('putObject', {
       Bucket: this.s3BucketName,
-      Key: todoId,
+      Key: { userId, todoId },
       Expires: 1000,
     })
     logger.info('url')

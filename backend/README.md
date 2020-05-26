@@ -11,7 +11,7 @@
   * Circle CI
 * DynamoDB
 * AWS API Gateway
-* AWS Kinesis, SQS, and SNS
+* AWS Kinesis Stream, Kinesis Firehose
 * Serverless Plugins
   * Serverless-Offline
   * Serverless-Dynamodb-Local
@@ -55,11 +55,11 @@ To create items, please input with POST
 To update items, please input the todo id number from the list of todos, then update the item with PATCH
 
 ```json
-    {
-    "name": "Change beddings",
-    "dueDate": "2020-05-27",
-    "done": true
-    }
+  {
+  "name": "Change beddings",
+  "dueDate": "2020-05-27",
+  "done": true
+  }
 ```
 
 To delete items, please input the todo id number from the lsit of todos, then delete item with DELETE

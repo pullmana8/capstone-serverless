@@ -1,15 +1,11 @@
-/* eslint-disable id-blacklist */
-import * as uuid from 'uuid'
 import { DynamoDB } from 'aws-sdk'
-import { TodoItem } from '../models/TodoItem'
-import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../lambda/helpers/logger'
 
 const logger = createLogger('todos-access')
 
 const todosTable = process.env.TODOS_TABLE
-const userIdIndex = process.env.USER_ID_INDEX
+/* const userIdIndex = process.env.USER_ID_INDEX */
 
 let AWS
 if (process.env.X_AMX_TRACE_ID) {
@@ -30,7 +26,8 @@ const db = process.env.IS_OFFLINE
     })
   : new DynamoDB.DocumentClient()
 
-/* export async function listAllTodos(userId: string): Promise<TodoItem[]> {
+/*
+export async function listAllTodos(userId: string): Promise<TodoItem[]> {
   logger.debug(`List todos items for user`, userId)
 
   const params = {
@@ -70,9 +67,9 @@ export async function createTodoItem(
   await db.put(newItem).promise()
   logger.info('List items: ', newItem)
   return newItem.Item
-}
+} */
 
-export async function updateTodoItem(
+export async function updateTodo(
   userId: string,
   todoId: string,
   payload: UpdateTodoRequest,
@@ -87,6 +84,7 @@ export async function updateTodoItem(
         ':dueDate': payload!.dueDate,
         ':done': payload!.done,
       },
+      ReturnValues: 'UPDATED_NEW',
     }
 
     await db.update(params).promise()
@@ -95,7 +93,7 @@ export async function updateTodoItem(
       throw new err()
     }
   }
-} */
+}
 
 export async function deleteTodoById(todoId: string) {
   logger.debug('Deleting todo id for user', todoId)

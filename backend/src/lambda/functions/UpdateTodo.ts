@@ -7,11 +7,11 @@ import {
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
 import { getUserId } from '../helpers/authHelper'
 import { APIGatewayProxyResult } from 'aws-lambda'
-import { TodosAccess } from '../../dataLayer/TodosAccess'
+import { updateTodo } from '../../dataLayer/Database'
 
 const logger = createLogger('update-todo')
 
-const updateTodo: Function = async (
+const updateTodoItem: Function = async (
   event: AWSLambda.APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   logger.debug('event: ', event)
@@ -21,7 +21,7 @@ const updateTodo: Function = async (
   const userId = getUserId(authHeader)
   logger.info('List todo id for user', todoId)
 
-  const items = await new TodosAccess().updateTodo(userId, todoId, updatedTodo)
+  const items = await updateTodo(userId, todoId, updatedTodo)
   if (!todoId) {
     logger.error(
       `user requesting to update an non-existing todo with id ${todoId}`,
@@ -40,4 +40,4 @@ const updateTodo: Function = async (
     })
   }
 }
-export default runWarm(updateTodo)
+export default runWarm(updateTodoItem)

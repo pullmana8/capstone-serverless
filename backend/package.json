@@ -81,6 +81,7 @@
     "serverless-reqvalidator-plugin": "^1.0.3",
     "serverx-ts": "0.0.27",
     "sha.js": "^2.4.11",
+    "snowplow-analytics-sdk": "^0.3.0",
     "uuid": "^8.1.0",
     "winston": "^3.2.1",
     "winston-loggly-bulk": "^3.1.0"

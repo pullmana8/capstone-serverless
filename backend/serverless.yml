@@ -28,9 +28,8 @@ custom:
         - "middy"
     dynamic:
       bail: true
-  # Topic Name for SNS
-  topicName: imagesTopic-${self:provider.stage}
-  queueName: get-todos-${self:provider.stage}
+#  topicName: imagesTopic-${self:provider.stage}
+#  queueName: get-todos-${self:provider.stage}
   streamName: todosStream-${self:provider.stage}
   # Documentation for the API
   documentation:
@@ -73,6 +72,8 @@ provider:
   logs:
     websocket:
       level: ERROR
+    restApi:
+      level: ERROR
   # Runtime for NodeJS
   runtime: nodejs12.x
   region: us-east-2
@@ -94,35 +95,43 @@ provider:
     ATTACHMENTS_BUCKET: attachments-urls-${self:provider.stage}-${self:provider.region}
     CONNECTIONS_TABLE: Connections-${self:provider.stage}-${self:provider.region}
     SIGNED_URL_EXPIRATION: 300
-    AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
-    AUTH_0_SECRET_FIELD: auth0Secret
+#    AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
+#    AUTH_0_SECRET_FIELD: auth0Secret
     AUTH0_CLIENT_SECRET: ${env:AUTH0_CLIENT_SECRET}
 
   iamRoleStatements:
+#    - Effect: Allow
+#      Action:
+#        - secretsmanager:GetSecretValue
+#      Resource: !Ref Auth0Secret
+#    - Effect: Allow
+#      Action:
+#        - kms:Decrypt
+#      Resource: !GetAtt KMSKey.Arn
+#    - Effect: Allow
+#      Action:
+#        - sns:Publish
+#      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
     - Effect: Allow
       Action:
-        - secretsmanager:GetSecretValue
-      Resource: !Ref Auth0Secret
-    - Effect: Allow
-      Action:
-        - kms:Decrypt
-      Resource: !GetAtt KMSKey.Arn
-    - Effect: Allow
-      Action:
-        - sns:Publish
-      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
-    - Effect: Allow
-      Action:
+        - kinesis:DescribeStream
+        - kinesis:DescribeStreamSummary
         - kinesis:GetRecords
         - kinesis:GetShardIterator
-        - kinesis:DescribeStream
+        - kinesis:ListShards
         - kinesis:ListStreams
-        - kinesis:PutRecord
-        - kinesis:PutRecords
-      Resource:
-        Fn::GetAtt:
-          - todosStream
-          - Arn
+        - kinesis:SubscribeToShard
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - firehose:DeleteDeliveryStream
+        - firehose:PutRecord
+        - firehose:PutRecordBatch
+        - firehose:UpdateDestination
+      Resource: "*"
   # XRay Tracing active
   tracing:
     lambda: true
@@ -132,18 +141,6 @@ functions:
   RS256:
     tracing: Active
     handler: src/lambda/auth/RS256Auth0Authorizer.handler
-    iamRoleStatementsInherit: true
-    events:
-      - sqs:
-          arn:
-            Fn::Join:
-              - ':'
-              - - arn
-                - aws
-                - sqs
-                - Ref: AWS::Region
-                - Ref: AWS::AccountId
-                - authorizer-user
   GetTodos:
     tracing: Active
     handler: src/lambda/functions/GetTodos.default
@@ -180,11 +177,6 @@ functions:
           cors: true
           allowCredentials: true
           authorizer: RS256
-      - sqs:
-          arn:
-            Fn::GetAtt:
-              - GetTodoQueue
-              - Arn
 
   CreateTodo:
     tracing: Active
@@ -224,6 +216,7 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: "*"
+
   UpdateTodo:
     tracing: Active
     handler: src/lambda/functions/UpdateTodo.default
@@ -261,6 +254,7 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: "*"
+
   DeleteTodo:
     tracing: Active
     handler: src/lambda/functions/DeleteTodo.default
@@ -292,6 +286,7 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: "*"
+
   GenerateUploadUrl:
     tracing: Active
     handler: src/lambda/functions/GenerateUploadUrl.default
@@ -315,8 +310,8 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow
         Action:
-        - s3:PutObject
-        - s3:GetObject
+          - s3:PutObject
+          - s3:GetObject
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
       - Effect: Allow
         Action:
@@ -329,6 +324,7 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: "*"
+
   ConnectHandler:
     tracing: Active
     handler: src/lambda/websocket/Connect.handler
@@ -354,6 +350,7 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: "*"
+
   DisconnectHandler:
     tracing: Active
     handler: "src/lambda/websocket/Disconnect.handler"
@@ -379,37 +376,87 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: "*"
-  SendUploadNotifications:
+
+#  SendUploadNotifications:
+#    tracing: Active
+#    environment:
+#      STAGE: ${self:provider.stage}
+#      API_ID:
+#        Ref: WebsocketsApi
+#    handler: src/lambda/s3/SendNotification.handler
+#    events:
+#      -
+#        sns:
+#          arn:
+#            Fn::Join:
+#              - ":"
+#              -
+#                - arn:aws:sns
+#                -
+#                  Ref: AWS::Region
+#                -
+#                  Ref: AWS::AccountId
+#                - ${self:custom.topicName}
+#          topicName: ${self:custom.topicName}
+
+  ProcessDynamodbStream:
     tracing: Active
+    handler: src/lambda/dynamodb/ProcessStream.default
+    events:
+      - stream:
+          arn: arn:aws:kinesis:${self:provider.region}:#{AWS::AccountId}:stream/${self:custom.streamName}
+          batchSize: 100
+          startingPosition: LATEST
+          enabled: false
+          consumer: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetShardIterator
+          - dynamodb:DescribeStream
+          - dynamodb:GetRecords
+          - dynamodb:ListStreams
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/stream/2020-05-26T14:54:49.891
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - kinesis:DescribeStream
+          - kinesis:PutRecord
+          - kinesis:DescribeStreamSummary
+          - kinesis:ListShards
+          - kinesis:GetShardIterator
+          - kinesis:GetRecords
+        Resource: arn:aws:kinesis:${self:provider.region}:#{AWS::AccountId}:stream/${self:custom.streamName}
+
+  webhook:
+    handler: src/firehose/webhook.execute
     environment:
       STAGE: ${self:provider.stage}
-      API_ID:
-        Ref: WebsocketsApi
-    handler: src/lambda/s3/SendNotification.handler
     events:
-      -
-        sns:
-          arn:
-            Fn::Join:
-              - ":"
-              -
-                - arn:aws:sns
-                -
-                  Ref: AWS::Region
-                -
-                  Ref: AWS::AccountId
-                - ${self:custom.topicName}
-          topicName: ${self:custom.topicName}
+      - http:
+          path: /webhook
+          method: post
 
 resources:
   - ${file(./services/apigateway/gateway.yml)}
   - ${file(./services/uploads/s3bucket.yml)}
   - ${file(./services/dynamodb/dynamodb.yml)}
   - ${file(./services/dynamodb/connections.yml)}
-  - ${file(./services/sns/snsTopics.yml)}
+#  - ${file(./services/sns/snsTopics.yml)}
   - ${file(./services/kmskey/kms.yml)}
-  - ${file(./services/sqs/queues.yml)}
-  - ${file(./services/kinesis/stream.yml)}
+#  - ${file(./services/sqs/queues.yml)}
+  - ${file(./services/kinesis-stream/stream.yml)}
+  - ${file(./services/kinesis-firehose/firehose.yml)}
 
 plugins:
   - serverless-jetpack

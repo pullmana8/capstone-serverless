@@ -12,7 +12,7 @@ const getTodos: Function = async (
   event: AWSLambda.APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   logger.debug('event: ', event)
-  const authHeader = event.headers['Authorization']
+  const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
   logger.info(`Log todo items for user ${userId}`)
   const result = await new TodosAccess().getUserTodos(userId)

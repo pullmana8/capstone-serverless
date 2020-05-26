@@ -3,7 +3,7 @@ import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import { JwtPayload } from '../../token/JwtPayload'
 import { createLogger } from '../helpers/logger'
 
-const logger = createLogger('delete')
+const logger = createLogger('auth-user')
 
 const authCert = `-----BEGIN CERTIFICATE-----
 MIIDBzCCAe+gAwIBAgIJfWOD1NCGFHHsMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV

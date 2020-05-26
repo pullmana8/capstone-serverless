@@ -5,7 +5,6 @@ import {
   corsSuccessResponse,
   runWarm,
 } from '../helpers/utils'
-import { S3Helper } from '../helpers/s3Helper'
 import { APIGatewayProxyResult } from 'aws-lambda'
 import { TodosAccess } from '../../dataLayer/TodosAccess'
 
@@ -16,11 +15,12 @@ const generateUploadUrl: Function = async (
   event: AWSLambda.APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   logger.debug('event: ', event)
-  const authHeader = event.headers['Authorization']
+  const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
   const todoId = event.pathParameters.todoId
   const item = await todosAccess.getTodoById(todoId)
-  const url = new S3Helper().getPresignedUrl(todoId)
+  const url = await generateUploadUrl(todoId, userId)
+
   if (item.Count === 0) {
     logger.error(
       `User ${userId} requesting to upload url does not exist with id ${todoId}`,

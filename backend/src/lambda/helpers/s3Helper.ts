@@ -32,7 +32,7 @@ export class S3Helper {
       logger.error(err)
     }
     logger.info(null)
-    return null
+    return null!
   }
 
   getPresignedUrl(todoId: string): string {

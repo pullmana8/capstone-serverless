@@ -23,7 +23,7 @@ class Explode extends Handler {
   handle(message$: Observable<Message>): Observable<Message> {
     return message$.pipe(
       tap(({ response }) => {
-        response!['x']['y'] = 'z'
+        response!.x.y = 'z'
       }),
     )
   }

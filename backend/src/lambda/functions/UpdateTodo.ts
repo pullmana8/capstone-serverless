@@ -1,5 +1,4 @@
 import { createLogger } from '../helpers/logger'
-import { updateTodoItem } from '../../dataLayer/Database'
 import {
   corsErrorResponse,
   corsSuccessResponse,
@@ -17,11 +16,11 @@ const updateTodo: Function = async (
   logger.debug('event: ', event)
   const todoId = event.pathParameters.todoId
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
-  const authHeader = event.headers['Authorization']
+  const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
   logger.info('List todo id for user', todoId)
 
-  const items = await updateTodoItem(todoId, updatedTodo, userId)
+  const items = await updateTodo(todoId, updatedTodo, userId)
   if (!todoId) {
     logger.error(
       `user requesting to update an non-existing todo with id ${todoId}`,

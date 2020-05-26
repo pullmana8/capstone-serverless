@@ -25,7 +25,7 @@ const deleteTodo: Function = async (
     return response
   }
 
-  const authHeader = event.headers['Authorization']
+  const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
   const deleteItem = await deleteTodoById(todoId)
 

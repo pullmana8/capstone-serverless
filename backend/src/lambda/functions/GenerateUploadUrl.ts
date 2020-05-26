@@ -11,7 +11,7 @@ import { TodosAccess } from '../../dataLayer/TodosAccess'
 const logger = createLogger('generate-upload')
 const todosAccess = new TodosAccess()
 
-const generateUploadUrl: Function = async (
+const uploadUrl: Function = async (
   event: AWSLambda.APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   logger.debug('event: ', event)
@@ -19,7 +19,7 @@ const generateUploadUrl: Function = async (
   const userId = getUserId(authHeader)
   const todoId = event.pathParameters.todoId
   const item = await todosAccess.getTodoById(todoId)
-  const url = await generateUploadUrl(todoId, userId)
+  const url = await new TodosAccess().generateUploadUrl(todoId, userId)
 
   if (item.Count === 0) {
     logger.error(
@@ -33,14 +33,14 @@ const generateUploadUrl: Function = async (
   }
 
   if (item.Items[0].userId !== userId) {
-    logger.error(
-      `user ${userId} requesting put url todo does not belong to account with id ${todoId}`,
-    )
     const error = corsErrorResponse({
       message:
         'Unable to upload image for user. User is requesting to upload url for todo item that does not belong to account.',
       input: event,
     })
+    logger.error(
+      `user ${userId} requesting put url todo does not belong to account with id ${todoId}`,
+    )
     return error
   } else {
     const success = corsSuccessResponse({
@@ -48,8 +48,9 @@ const generateUploadUrl: Function = async (
       url,
       input: event,
     })
+    logger.info('success')
     return success
   }
 }
 
-export default runWarm(generateUploadUrl)
+export default runWarm(uploadUrl)

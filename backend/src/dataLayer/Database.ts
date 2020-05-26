@@ -30,7 +30,7 @@ const db = process.env.IS_OFFLINE
     })
   : new DynamoDB.DocumentClient()
 
-export async function listAllTodos(userId: string): Promise<TodoItem[]> {
+/* export async function listAllTodos(userId: string): Promise<TodoItem[]> {
   logger.debug(`List todos items for user`, userId)
 
   const params = {
@@ -95,7 +95,7 @@ export async function updateTodoItem(
       throw new err()
     }
   }
-}
+} */
 
 export async function deleteTodoById(todoId: string) {
   logger.debug('Deleting todo id for user', todoId)

@@ -302,11 +302,12 @@ functions:
           cors: true
           authorizer: RS256
           allowCredentials: true
-    iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
+          - dynamodb:Query
           - dynamodb:PutItem
+          - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:

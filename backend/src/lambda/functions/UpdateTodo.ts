@@ -7,6 +7,7 @@ import {
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
 import { getUserId } from '../helpers/authHelper'
 import { APIGatewayProxyResult } from 'aws-lambda'
+import { TodosAccess } from '../../dataLayer/TodosAccess'
 
 const logger = createLogger('update-todo')
 
@@ -20,7 +21,7 @@ const updateTodo: Function = async (
   const userId = getUserId(authHeader)
   logger.info('List todo id for user', todoId)
 
-  const items = await updateTodo(todoId, updatedTodo, userId)
+  const items = await new TodosAccess().updateTodo(userId, todoId, updatedTodo)
   if (!todoId) {
     logger.error(
       `user requesting to update an non-existing todo with id ${todoId}`,

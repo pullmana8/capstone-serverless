@@ -8,7 +8,6 @@ import { APIGatewayProxyResult } from 'aws-lambda'
 import { TodosAccess } from '../../dataLayer/TodosAccess'
 
 const logger = createLogger('generate-upload')
-const todosAccess = new TodosAccess()
 
 const uploadUrl: Function = async (
   event: AWSLambda.APIGatewayProxyEvent,
@@ -17,8 +16,7 @@ const uploadUrl: Function = async (
   const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
   const todoId = event.pathParameters.todoId
-  const url = await todosAccess.getTodoById(todoId)
-//  const url = await new TodosAccess().generateUploadUrl(todoId)
+  const url = await new TodosAccess().generateUploadUrl(todoId, userId)
 
   /* if (item.Count === 0) {
     logger.error(

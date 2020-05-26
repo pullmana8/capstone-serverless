@@ -1,7 +1,6 @@
 import { createLogger } from '../helpers/logger'
 import { getUserId } from '../helpers/authHelper'
 import {
-  corsErrorResponse,
   corsSuccessResponse,
   runWarm,
 } from '../helpers/utils'
@@ -18,8 +17,8 @@ const uploadUrl: Function = async (
   const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
   const todoId = event.pathParameters.todoId
-//  const item = await todosAccess.getTodoById(todoId)
-  const url = await new TodosAccess().generateUploadUrl(todoId)
+  const url = await todosAccess.getTodoById(todoId)
+//  const url = await new TodosAccess().generateUploadUrl(todoId)
 
   /* if (item.Count === 0) {
     logger.error(

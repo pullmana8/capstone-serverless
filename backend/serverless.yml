@@ -448,12 +448,12 @@ functions:
           method: post
 
 resources:
-  - ${file(./services/apigateway/gateway.yml)}
+  - ${file(./services/api-gateway/gateway.yml)}
   - ${file(./services/uploads/s3bucket.yml)}
   - ${file(./services/dynamodb/dynamodb.yml)}
   - ${file(./services/dynamodb/connections.yml)}
 #  - ${file(./services/sns/snsTopics.yml)}
-  - ${file(./services/kmskey/kms.yml)}
+#  - ${file(./services/kms-key/kms.yml)}
 #  - ${file(./services/sqs/queues.yml)}
   - ${file(./services/kinesis-stream/stream.yml)}
   - ${file(./services/kinesis-firehose/firehose.yml)}

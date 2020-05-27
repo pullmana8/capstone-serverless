@@ -25,7 +25,8 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Principal: '*'
-          Action: 's3:GetObject'
-          Effect: Allow
-          Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
+          - Sid: PublicReadForGetBucketObjects
+            Principal: '*'
+            Action: 's3:GetObject'
+            Effect: Allow
+            Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*

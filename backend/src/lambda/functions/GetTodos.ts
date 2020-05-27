@@ -8,22 +8,22 @@ import { TodosAccess } from '../../dataLayer/TodosAccess'
 const s3Helper = new S3Helper()
 const logger = createLogger('retrieve-todos')
 
-const getTodos: Function = async (
-  event: AWSLambda.APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> => {
-  logger.debug('event: ', event)
+const getTodos: Function = async (event: AWSLambda.APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  logger.debug('Received event: ', event)
+  
   const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
-  logger.info(`Log todo items for user ${userId}`)
-  const result = await new TodosAccess().getUserTodos(userId)
-  logger.info('todos: ', result)
+  logger.info(userId)
 
-  for (const record of result) {
+  const items = await new TodosAccess().getAllTodosItems(userId)
+  logger.info('todos: ', items)
+
+  for (const record of items) {
     record.attachmentUrl = await s3Helper.getTodoAttachmentUrl(record.todoId)
   }
 
   const response = corsSuccessResponse({
-    items: result,
+    items,
     input: event,
   })
 

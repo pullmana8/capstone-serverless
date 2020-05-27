@@ -1,17 +1,12 @@
 import { createLogger } from '../helpers/logger'
 import { getUserId } from '../helpers/authHelper'
-import {
-  corsSuccessResponse,
-  runWarm,
-} from '../helpers/utils'
+import { corsSuccessResponse, runWarm } from '../helpers/utils'
 import { APIGatewayProxyResult } from 'aws-lambda'
 import { TodosAccess } from '../../dataLayer/TodosAccess'
 
 const logger = createLogger('generate-upload')
 
-const uploadUrl: Function = async (
-  event: AWSLambda.APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> => {
+const uploadUrl: Function = async (event: AWSLambda.APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.debug('event: ', event)
   const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
@@ -40,13 +35,14 @@ const uploadUrl: Function = async (
     )
     return error
   } else { */
-    const success = corsSuccessResponse({
-      message: 'Upload url for user', userId,
-      url,
-      input: event,
-    })
-    logger.info('success')
-    return success
-  }
+  const success = corsSuccessResponse({
+    message: 'Upload url for user',
+    userId,
+    url,
+    input: event,
+  })
+  logger.info('success')
+  return success
+}
 
 export default runWarm(uploadUrl)

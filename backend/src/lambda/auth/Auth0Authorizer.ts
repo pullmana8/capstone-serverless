@@ -18,15 +18,9 @@ let cachedSecret: string */
 
 // @ts-ignore
 export const handler = middy(
-  async (
-    event: CustomAuthorizerEvent,
-    context,
-  ): Promise<CustomAuthorizerResult> => {
+  async (event: CustomAuthorizerEvent, context): Promise<CustomAuthorizerResult> => {
     try {
-      const decodedToken = await verifyToken(
-        event.authorizationToken!,
-        context.AUTH0SECRET[secretField!],
-      )
+      const decodedToken = await verifyToken(event.authorizationToken!, context.AUTH0SECRET[secretField!])
       logger.info('User was authorized', decodedToken)
 
       return {
@@ -62,14 +56,10 @@ export const handler = middy(
   },
 )
 
-async function verifyToken(
-  authHeader: string,
-  secret: string,
-): Promise<JwtPayload> {
+async function verifyToken(authHeader: string, secret: string): Promise<JwtPayload> {
   if (!authHeader) throw new Error('No authorization error')
 
-  if (!authHeader.toLowerCase().startsWith('bearer '))
-    throw new Error('Invalid authorization bearer')
+  if (!authHeader.toLowerCase().startsWith('bearer ')) throw new Error('Invalid authorization bearer')
 
   const split = authHeader.split(' ')
   const token = split[1]

@@ -16,11 +16,7 @@ interface IResponse {
   }
 }
 
-function lambdaResponse({
-  json,
-  statusCode,
-  allowCORS = false,
-}: IResponseOptions) {
+function lambdaResponse({ json, statusCode, allowCORS = false }: IResponseOptions) {
   const response: IResponse = {
     statusCode,
     body: JSON.stringify(json),

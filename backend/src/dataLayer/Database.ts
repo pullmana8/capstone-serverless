@@ -1,5 +1,4 @@
 import { DynamoDB } from 'aws-sdk'
-import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../lambda/helpers/logger'
 
 const logger = createLogger('todos-access')
@@ -20,9 +19,7 @@ const db = process.env.IS_OFFLINE
       region: 'localhost',
       accessKeyId: 'MOCK_ACCESS_KEY_ID',
       secretAccessKey: 'MOCK_SECRET_ACCESS_KEY',
-      endpoint: `http://${process.env.DYNAMODB_HOST || 'localhost'}:${
-        process.env.DYNAMODB_PORT || 8000
-      }`,
+      endpoint: `http://${process.env.DYNAMODB_HOST || 'localhost'}:${process.env.DYNAMODB_PORT || 8000}`,
     })
   : new DynamoDB.DocumentClient()
 
@@ -67,13 +64,9 @@ export async function createTodoItem(
   await db.put(newItem).promise()
   logger.info('List items: ', newItem)
   return newItem.Item
-} */
+}
 
-export async function updateTodo(
-  userId: string,
-  todoId: string,
-  payload: UpdateTodoRequest,
-) {
+export async function updateTodo(userId: string, todoId: string, payload: UpdateTodoRequest) {
   try {
     const params = {
       TableName: todosTable!,
@@ -93,7 +86,7 @@ export async function updateTodo(
       throw new err()
     }
   }
-}
+} */
 
 export async function deleteTodoById(todoId: string) {
   logger.debug('Deleting todo id for user', todoId)

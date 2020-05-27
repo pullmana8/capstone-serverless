@@ -1,18 +1,12 @@
 import { createLogger } from '../helpers/logger'
-import {
-  corsErrorResponse,
-  corsSuccessResponse,
-  runWarm,
-} from '../helpers/utils'
+import { corsErrorResponse, corsSuccessResponse, runWarm } from '../helpers/utils'
 import { deleteTodoById } from '../../dataLayer/Database'
 import { getUserId } from '../helpers/authHelper'
 import { APIGatewayProxyResult } from 'aws-lambda'
 
 const logger = createLogger('delete')
 
-const deleteTodo: Function = async (
-  event: AWSLambda.APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> => {
+const deleteTodo: Function = async (event: AWSLambda.APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.debug(event.body)
 
   const todoId = event.pathParameters ? event.pathParameters.todoId : ''

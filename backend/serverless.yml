@@ -30,8 +30,8 @@ custom:
       bail: true
 #  topicName: imagesTopic-${self:provider.stage}
 #  queueName: get-todos-${self:provider.stage}
-  streamName: todosStream-${self:provider.stage}
-  # Documentation for the API
+#  streamName: todosStream-${self:provider.stage}
+# Documentation for the API
   documentation:
     api:
       info:
@@ -112,27 +112,27 @@ provider:
 #      Action:
 #        - sns:Publish
 #      Resource: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}64:${self:custom.topicName}-${self:provider.stage}
-    - Effect: Allow
-      Action:
-        - kinesis:DescribeStream
-        - kinesis:DescribeStreamSummary
-        - kinesis:GetRecords
-        - kinesis:GetShardIterator
-        - kinesis:ListShards
-        - kinesis:ListStreams
-        - kinesis:SubscribeToShard
-        - logs:CreateLogGroup
-        - logs:CreateLogStream
-        - logs:PutLogEvents
-      Resource: "*"
-    - Effect: Allow
-      Action:
-        - firehose:DeleteDeliveryStream
-        - firehose:PutRecord
-        - firehose:PutRecordBatch
-        - firehose:UpdateDestination
-      Resource: "*"
-  # XRay Tracing active
+#    - Effect: Allow
+#      Action:
+#        - kinesis:DescribeStream
+#        - kinesis:DescribeStreamSummary
+#        - kinesis:GetRecords
+#        - kinesis:GetShardIterator
+#        - kinesis:ListShards
+#        - kinesis:ListStreams
+#        - kinesis:SubscribeToShard
+#        - logs:CreateLogGroup
+#        - logs:CreateLogStream
+#        - logs:PutLogEvents
+#      Resource: "*"
+#    - Effect: Allow
+#      Action:
+#        - firehose:DeleteDeliveryStream
+#        - firehose:PutRecord
+#        - firehose:PutRecordBatch
+#        - firehose:UpdateDestination
+#      Resource: "*"
+# XRay Tracing active
   tracing:
     lambda: true
     apiGateway: true
@@ -148,6 +148,7 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
+          - dynamodb:Scan
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
@@ -376,7 +377,7 @@ functions:
           - logs:CreateLogGroup
           - logs:PutLogEvents
         Resource: "*"
-
+#
 #  SendUploadNotifications:
 #    tracing: Active
 #    environment:
@@ -398,54 +399,54 @@ functions:
 #                  Ref: AWS::AccountId
 #                - ${self:custom.topicName}
 #          topicName: ${self:custom.topicName}
-
-  ProcessDynamodbStream:
-    tracing: Active
-    handler: src/lambda/dynamodb/ProcessStream.default
-    events:
-      - stream:
-          arn: arn:aws:kinesis:${self:provider.region}:#{AWS::AccountId}:stream/${self:custom.streamName}
-          batchSize: 100
-          startingPosition: LATEST
-          enabled: false
-          consumer: true
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:GetShardIterator
-          - dynamodb:DescribeStream
-          - dynamodb:GetRecords
-          - dynamodb:ListStreams
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/stream/2020-05-26T14:54:49.891
-      - Effect: Allow
-        Action:
-          - logs:CreateLogStream
-          - logs:CreateLogGroup
-          - logs:PutLogEvents
-        Resource: "*"
-      - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: "*"
-      - Effect: Allow
-        Action:
-          - kinesis:DescribeStream
-          - kinesis:PutRecord
-          - kinesis:DescribeStreamSummary
-          - kinesis:ListShards
-          - kinesis:GetShardIterator
-          - kinesis:GetRecords
-        Resource: arn:aws:kinesis:${self:provider.region}:#{AWS::AccountId}:stream/${self:custom.streamName}
-
-  webhook:
-    handler: src/firehose/webhook.execute
-    environment:
-      STAGE: ${self:provider.stage}
-    events:
-      - http:
-          path: /webhook
-          method: post
+#
+#  ProcessDynamodbStream:
+#    tracing: Active
+#    handler: src/lambda/dynamodb/ProcessStream.default
+#    events:
+#      - stream:
+#          arn: arn:aws:kinesis:${self:provider.region}:#{AWS::AccountId}:stream/${self:custom.streamName}
+#          batchSize: 100
+#          startingPosition: LATEST
+#          enabled: false
+#          consumer: true
+#    iamRoleStatements:
+#      - Effect: Allow
+#        Action:
+#          - dynamodb:GetShardIterator
+#          - dynamodb:DescribeStream
+#          - dynamodb:GetRecords
+#          - dynamodb:ListStreams
+#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/stream/2020-05-26T14:54:49.891
+#      - Effect: Allow
+#        Action:
+#          - logs:CreateLogStream
+#          - logs:CreateLogGroup
+#          - logs:PutLogEvents
+#        Resource: "*"
+#      - Effect: Allow
+#        Action:
+#          - xray:PutTraceSegments
+#          - xray:PutTelemetryRecords
+#        Resource: "*"
+#      - Effect: Allow
+#        Action:
+#          - kinesis:DescribeStream
+#          - kinesis:PutRecord
+#          - kinesis:DescribeStreamSummary
+#          - kinesis:ListShards
+#          - kinesis:GetShardIterator
+#          - kinesis:GetRecords
+#        Resource: arn:aws:kinesis:${self:provider.region}:#{AWS::AccountId}:stream/${self:custom.streamName}
+#
+#  webhook:
+#    handler: src/firehose/webhook.execute
+#    environment:
+#      STAGE: ${self:provider.stage}
+#    events:
+#      - http:
+#          path: /webhook
+#          method: post
 
 resources:
   - ${file(./services/api-gateway/gateway.yml)}
@@ -455,8 +456,8 @@ resources:
 #  - ${file(./services/sns/snsTopics.yml)}
 #  - ${file(./services/kms-key/kms.yml)}
 #  - ${file(./services/sqs/queues.yml)}
-  - ${file(./services/kinesis-stream/stream.yml)}
-  - ${file(./services/kinesis-firehose/firehose.yml)}
+#  - ${file(./services/kinesis-stream/stream.yml)}
+#  - ${file(./services/kinesis-firehose/firehose.yml)}
 
 plugins:
   - serverless-jetpack

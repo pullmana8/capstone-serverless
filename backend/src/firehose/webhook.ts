@@ -4,11 +4,7 @@ import { Firehose } from 'aws-sdk'
 const DeliveryStreamName = `${process.env.STAGE}-serverless-kinesis-firehose`
 const firehose = new Firehose()
 
-export const execute = (
-  event: APIGatewayEvent,
-  context: Context,
-  callback: Callback,
-) => {
+export const execute = (event: APIGatewayEvent, context: Context, callback: Callback) => {
   const json: any = JSON.parse(event.body as string)
   const params = {
     DeliveryStreamName,

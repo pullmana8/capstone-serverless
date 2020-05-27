@@ -1,14 +1,5 @@
 import { Injectable } from 'injection-js'
-import {
-  AWSLambdaApp,
-  Handler,
-  Message,
-  HttpApp,
-  RequestLogger,
-  Compressor,
-  CORS,
-  Route,
-} from 'serverx-ts'
+import { AWSLambdaApp, Handler, Message, HttpApp, RequestLogger, Compressor, CORS, Route } from 'serverx-ts'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 import { createServer } from 'http'

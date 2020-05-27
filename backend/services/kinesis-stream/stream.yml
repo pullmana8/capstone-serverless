@@ -4,4 +4,5 @@ Resources:
     Properties:
       Name: ${self:custom.streamName}
       ShardCount: 1
+      EnforceConsumerDeletion: true
 

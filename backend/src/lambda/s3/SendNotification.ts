@@ -48,10 +48,7 @@ async function processS3Event(s3Event: S3Event) {
   }
 }
 
-async function sendMessageToClient(
-  connectionId: string,
-  payload: { imageId: string },
-) {
+async function sendMessageToClient(connectionId: string, payload: { imageId: string }) {
   try {
     logger.info('Sending message to a connection', connectionId)
 

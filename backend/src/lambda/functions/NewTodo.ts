@@ -3,19 +3,20 @@ import { getUserId } from '../helpers/authHelper'
 import { corsSuccessResponse, runWarm } from '../helpers/utils'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { APIGatewayProxyResult } from 'aws-lambda'
-import { TodosAccess } from '../../dataLayer/TodosAccess'
+import { createTodoItem } from '../../businessLogic/Todos'
 
 const logger = createLogger('create-todo')
 
-const createTodo: Function = async (
-  event: AWSLambda.APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> => {
-  logger.debug('event: ', event)
+const createTodo: Function = async (event: AWSLambda.APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  logger.debug('Received event: ', event)
+  const newTodo: CreateTodoRequest = typeof event.body === "string" ? JSON.parse(event.body) : event.body
+
   const authHeader = event.headers.Authorization
   const userId = getUserId(authHeader)
-  logger.info(`Create todo items for user ${userId}`)
-  const newTodo: CreateTodoRequest = JSON.parse(event.body)
-  const item = await new TodosAccess().createTodo(newTodo, userId)
+  logger.info(userId)
+
+  const item = await createTodoItem(userId, newTodo)
+  
   const response = corsSuccessResponse({
     message: 'Items created',
     items: item,

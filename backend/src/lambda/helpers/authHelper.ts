@@ -15,8 +15,7 @@ export function getUserId(authHeader: string): string {
 function getToken(authHeader: string): string {
   if (!authHeader) throw new Error('no authentication header')
 
-  if (!authHeader.toLowerCase().startsWith('bearer '))
-    throw new Error('Invalid authentication header')
+  if (!authHeader.toLowerCase().startsWith('bearer ')) throw new Error('Invalid authentication header')
 
   const split = authHeader.split(' ')
   const token = split[1]

@@ -1,19 +1,13 @@
 import { createLogger } from '../helpers/logger'
-import {
-  corsErrorResponse,
-  corsSuccessResponse,
-  runWarm,
-} from '../helpers/utils'
+import { corsErrorResponse, corsSuccessResponse, runWarm } from '../helpers/utils'
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
 import { getUserId } from '../helpers/authHelper'
 import { APIGatewayProxyResult } from 'aws-lambda'
-import { updateTodo } from '../../dataLayer/Database'
+import { updateTodoItem } from '../../businessLogic/Todos'
 
 const logger = createLogger('update-todo')
 
-const updateTodoItem: Function = async (
-  event: AWSLambda.APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> => {
+const updateTodo: Function = async (event: AWSLambda.APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.debug('event: ', event)
   const todoId = event.pathParameters.todoId
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
@@ -21,11 +15,9 @@ const updateTodoItem: Function = async (
   const userId = getUserId(authHeader)
   logger.info('List todo id for user', todoId)
 
-  const items = await updateTodo(userId, todoId, updatedTodo)
+  const result = await updateTodoItem(userId, todoId, updatedTodo)
   if (!todoId) {
-    logger.error(
-      `user requesting to update an non-existing todo with id ${todoId}`,
-    )
+    logger.error(`user requesting to update an non-existing todo with id ${todoId}`)
     const error = corsErrorResponse({
       message: 'TODO item does not exist',
       input: event,
@@ -35,9 +27,9 @@ const updateTodoItem: Function = async (
     return corsSuccessResponse({
       message: 'Items sucessfully updated for user',
       userId,
-      items,
+      result,
       input: event,
     })
   }
 }
-export default runWarm(updateTodoItem)
+export default runWarm(updateTodo)

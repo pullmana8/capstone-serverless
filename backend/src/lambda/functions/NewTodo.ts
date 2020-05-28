@@ -1,29 +1,32 @@
-import { createLogger } from '../helpers/logger'
-import { getUserId } from '../helpers/authHelper'
-import { corsSuccessResponse, runWarm } from '../helpers/utils'
-import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
-import { APIGatewayProxyResult } from 'aws-lambda'
-import { createTodoItem } from '../../businessLogic/Todos'
+import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { createLogger } from "../helpers/logger";
+import { getUserId } from "../helpers/authHelper";
+import { CreateTodoRequest } from "../../requests/CreateTodoRequest";
+import { TodosAccess } from "../../dataLayer/TodosAccess";
+import { corsSuccessResponse } from "../helpers/utils";
 
 const logger = createLogger('create-todo')
 
-const createTodo: Function = async (event: AWSLambda.APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  logger.debug('Received event: ', event)
-  const newTodo: CreateTodoRequest = typeof event.body === "string" ? JSON.parse(event.body) : event.body
+export const handler: APIGatewayProxyHandler = async(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    logger.debug('Received event: ', event)
 
-  const authHeader = event.headers.Authorization
-  const userId = getUserId(authHeader)
-  logger.info(userId)
+    const authHeader = event.headers.Authorization
+    const userId = getUserId(authHeader)
+    logger.info('Decoded user: ', userId)
 
-  const item = await createTodoItem(userId, newTodo)
-  
-  const response = corsSuccessResponse({
-    message: 'Items created',
-    items: item,
-    input: event,
-  })
+    const newTodo: CreateTodoRequest = typeof event.body === "string" ? JSON.parse(event.body) : event.body
+    logger.info('List requested items: ', newTodo)
+    
+    const todoId = event.pathParameters!.todoId
+    logger.info('List todo item', todoId)
 
-  return response
+    const item = await new TodosAccess().createTodo(newTodo)
+    logger.info('List items: ', item)
+
+    const response = corsSuccessResponse({
+        item,
+        input: event
+    })
+
+    return response
 }
-
-export default runWarm(createTodo)

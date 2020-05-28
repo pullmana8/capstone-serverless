@@ -1,35 +1,27 @@
-import { createLogger } from '../helpers/logger'
-import { corsErrorResponse, corsSuccessResponse, runWarm } from '../helpers/utils'
-import { deleteTodoById } from '../../dataLayer/Database'
-import { getUserId } from '../helpers/authHelper'
-import { APIGatewayProxyResult } from 'aws-lambda'
+import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { createLogger } from "../helpers/logger";
+import { getUserId } from "../helpers/authHelper";
+import { deleteTodoById } from "../../dataLayer/Database";
+import { corsSuccessResponse } from "../helpers/utils/response";
 
 const logger = createLogger('delete')
 
-const deleteTodo: Function = async (event: AWSLambda.APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  logger.debug(event.body)
+export const handler: APIGatewayProxyHandler = async(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    logger.debug('Received event: ', event)
 
-  const todoId = event.pathParameters ? event.pathParameters.todoId : ''
-  if (!todoId) {
-    logger.error('Invalid delete attempt without todo id')
-    const response = corsErrorResponse({
-      message: 'Invalid parameters',
-      input: event,
+    const authHeader = event.headers.Authorization
+    const userId = getUserId(authHeader)
+    logger.info('Decoded user: ', userId)
+
+    const todoId = event.pathParameters ? event.pathParameters.todoId : ''
+    logger.info('List todo id', todoId)
+
+    const deletItem = await deleteTodoById(todoId)
+    logger.info('Delete item', deletItem)
+
+    const success = corsSuccessResponse({
+        input: event
     })
-    return response
-  }
 
-  const authHeader = event.headers.Authorization
-  const userId = getUserId(authHeader)
-  const deleteItem = await deleteTodoById(todoId)
-
-  logger.info('List todo id for user', todoId)
-  logger.info('User delete todo item', deleteItem)
-  const sucess = corsSuccessResponse({
-    message: `Sucessfully deleted item ${deleteItem} for user ${userId}`,
-    input: event,
-  })
-  return sucess
+    return success
 }
-
-export default runWarm(deleteTodo)

@@ -143,7 +143,7 @@ functions:
     handler: src/lambda/auth/RS256Auth0Authorizer.handler
   GetTodos:
     tracing: Active
-    handler: src/lambda/functions/GetTodos.default
+    handler: src/lambda/functions/GetTodos.handler
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -181,7 +181,7 @@ functions:
 
   CreateTodo:
     tracing: Active
-    handler: src/lambda/functions/NewTodo.default
+    handler: src/lambda/functions/NewTodo.handler
     iamRoleStatementsInherit: true
     events:
       - http:
@@ -220,7 +220,7 @@ functions:
 
   UpdateTodo:
     tracing: Active
-    handler: src/lambda/functions/UpdateTodo.default
+    handler: src/lambda/functions/UpdateTodo.handler
     events:
       - http:
           method: patch
@@ -258,7 +258,7 @@ functions:
 
   DeleteTodo:
     tracing: Active
-    handler: src/lambda/functions/DeleteTodo.default
+    handler: src/lambda/functions/DeleteTodo.handler
     events:
       - http:
           method: delete
@@ -290,7 +290,7 @@ functions:
 
   GenerateUploadUrl:
     tracing: Active
-    handler: src/lambda/functions/GenerateUploadUrl.default
+    handler: src/lambda/functions/GenerateUploadUrl.handler
     events:
       - http:
           method: post

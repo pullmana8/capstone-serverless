@@ -5,29 +5,32 @@ import { TodosAccess } from '../dataLayer/TodosAccess'
 import { TodoItem } from '../models/TodoItem'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { TodoUpdate } from '../models/TodoUpdate'
+import { APIGatewayProxyEvent } from 'aws-lambda/trigger/api-gateway-proxy'
 
 const logger = createLogger('todos-access')
 const todosAccess = new TodosAccess()
 
 export async function getAllTodos(userId: string): Promise<TodoItem[]> {
-    return await todosAccess.getAllTodosItems(userId)
+  return todosAccess.getAllTodosItems(userId)
 }
 
-export async function createTodoItem(userId: string, todoItem: CreateTodoRequest): Promise<TodoItem> {
-    logger.debug('Create todo items for user', userId)
-    const todoId = uuid.v4()
-    const timestamp = new Date().toISOString()
-    return await todosAccess.createTodo({
-        userId: userId,
-        todoId: todoId,
-        createdAt: timestamp,
-        name: todoItem.name,
-        dueDate: todoItem.dueDate,
-        done: false,
-        attachmentUrl: null
-    })
+export async function createTodoItem(event: APIGatewayProxyEvent, userId: string, todoItem: CreateTodoRequest): Promise<TodoItem> {
+  logger.debug('Create todo items for user', userId)
+
+  let todoId = event.pathParameters ? event.pathParameters.todoId : uuid.v4()
+    
+  const timestamp = new Date().toISOString()
+  return todosAccess.createTodo({
+    userId,
+    todoId,
+    createdAt: timestamp,
+    name: todoItem.name,
+    dueDate: todoItem.dueDate,
+    done: false,
+    attachmentUrl: null!,
+  })
 }
 
 export async function updateTodoItem(userId: string, todoId: string, todoItem: UpdateTodoRequest): Promise<TodoUpdate> {
-    return await todosAccess.updateTodo(userId, todoId, todoItem)
+  return todosAccess.updateTodo(userId, todoId, todoItem)
 }

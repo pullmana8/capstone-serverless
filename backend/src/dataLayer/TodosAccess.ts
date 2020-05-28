@@ -22,13 +22,14 @@ export class TodosAccess {
     logger.info('Listing all todos')
     const result = await this.docClient
       .query({
-        TableName: this.todosTable,
-        IndexName: this.userIdIndex,
+        TableName: this.todosTable!,
+        IndexName: this.userIdIndex!,
         KeyConditionExpression: 'userId= :userId',
         ExpressionAttributeValues: {
           ':userId': userId,
         },
-      }).promise()
+      })
+      .promise()
     logger.info('List items: ', result, userId)
     return result.Items as TodoItem[]
   }
@@ -36,7 +37,7 @@ export class TodosAccess {
   async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput> {
     return this.docClient
       .query({
-        TableName: this.todosTable,
+        TableName: this.todosTable!,
         KeyConditionExpression: 'todoId = :todoId',
         ExpressionAttributeValues: {
           ':todoId': id,
@@ -46,22 +47,21 @@ export class TodosAccess {
   }
 
   async createTodo(todoItem: TodoItem): Promise<TodoItem> {
-    logger.info(todoItem)
-    logger.info(this.todosTable)
-
-    await this.docClient.put({
-      TableName: this.todosTable,
-      Item: todoItem
-    }).promise()
-
+    await this.docClient
+      .put({
+        TableName: this.todosTable!,
+        Item: todoItem,
+      })
+      .promise()
     return todoItem
   }
-  
+
   async updateTodo(userId: string, todoId: string, todoUpdate: TodoUpdate): Promise<TodoUpdate> {
-    await this.docClient.update({
-        TableName: this.todosTable,
+    await this.docClient
+      .update({
+        TableName: this.todosTable!,
         Key: { todoId, userId },
-        UpdateExpression: "set #name = :name, dueDate= :dueDate, done= :done",
+        UpdateExpression: 'set #name = :name, dueDate= :dueDate, done= :done',
         ExpressionAttributeValues: {
           ':name': todoUpdate.name,
           ':dueDate': todoUpdate.dueDate,
@@ -71,7 +71,7 @@ export class TodosAccess {
       })
       .promise()
 
-      return todoUpdate
+    return todoUpdate
   }
 
   async generateUploadUrl(todoId: string, userId: string): Promise<string> {
@@ -86,10 +86,10 @@ export class TodosAccess {
 
     await this.docClient
       .update({
-        TableName: this.todosTable,
+        TableName: this.todosTable!,
         Key: {
-          todoId: todoId,
-          userId: userId,
+          todoId,
+          userId,
         },
         UpdateExpression: 'set attachmentUrl = :url',
         ExpressionAttributeValues: {
